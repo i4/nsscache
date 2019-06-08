@@ -191,7 +191,8 @@ func SerializePasswds(w io.Writer, pws []Passwd) error {
 	}
 
 	// Sanity check
-	if indexOrig.Len() != indexId.Len() ||
+	if len(pws)*8 != indexOrig.Len() ||
+		indexOrig.Len() != indexId.Len() ||
 		indexId.Len() != indexName.Len() {
 		return fmt.Errorf("indexes have inconsistent length")
 	}

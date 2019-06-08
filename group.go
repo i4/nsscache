@@ -209,7 +209,8 @@ func SerializeGroups(w io.Writer, grs []Group) error {
 	}
 
 	// Sanity check
-	if indexOrig.Len() != indexId.Len() ||
+	if len(grs)*8 != indexOrig.Len() ||
+		indexOrig.Len() != indexId.Len() ||
 		indexId.Len() != indexName.Len() {
 		return fmt.Errorf("indexes have inconsistent length")
 	}
