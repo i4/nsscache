@@ -1,7 +1,6 @@
 # Compiler flags
 LDLIBS  = -pthread
-CFLAGS  = -fPIC -Wall -Wextra -Wconversion
-LDFLAGS = -shared
+CFLAGS  = -Wall -Wextra -Wconversion
 # DEB_BUILD_MAINT_OPTIONS='hardening=+all qa=+bug' dpkg-buildflags --export=make
 CFLAGS   += -g -O2 -Werror=array-bounds -Werror=clobbered -Werror=volatile-register-var -Werror=implicit-function-declaration -fstack-protector-strong -Wformat -Werror=format-security
 CPPFLAGS += -Wdate-time -D_FORTIFY_SOURCE=2
@@ -17,7 +16,8 @@ clean:
 	rm -f libnss_cash.so.2
 
 libnss_cash.so.2: $(wildcard *.c) $(wildcard *.h)
-	$(CC) -o $@ -Wl,-soname,$@ $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) \
+	$(CC) -o $@ -shared -fPIC -Wl,-soname,$@ \
+		$(CFLAGS) $(CPPFLAGS) $(LDFLAGS) \
 		file.c pw.c search.c \
 		$(LDLIBS)
 
