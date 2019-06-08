@@ -245,7 +245,7 @@ static void test_getpwnam(void) {
     assert(s == NSS_STATUS_TRYAGAIN);
     assert(errnop == ERANGE);
     s = _nss_cash_getpwnam_r("nope", &p, tmp_small, sizeof(tmp_small), &errnop);
-    assert(s == NSS_STATUS_NOTFOUND); // 42 does not exist
+    assert(s == NSS_STATUS_NOTFOUND); // does not exist
     assert(errnop == ENOENT);
     s = _nss_cash_getpwnam_r("nobody", &p, tmp_small, sizeof(tmp_small), &errnop);
     assert(s == NSS_STATUS_TRYAGAIN);
