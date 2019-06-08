@@ -18,17 +18,35 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"os"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		log.SetFlags(0)
-		log.Fatalf("usage: %s <path/to/config>\n", os.Args[0])
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr,
+			"usage: %[1]s [options] fetch <config>\n"+
+				"",
+			os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) == 0 {
+		flag.Usage()
+		os.Exit(1)
 	}
 
-	cfg, err := LoadConfig(os.Args[1])
+	switch args[0] {
+	case "fetch":
+		if len(args) != 2 {
+			break
+		}
+
+	cfg, err := LoadConfig(args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,4 +64,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+		return
+	}
+
+	flag.Usage()
+	os.Exit(1)
 }
