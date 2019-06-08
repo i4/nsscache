@@ -39,6 +39,8 @@ type Group struct {
 	Gid     uint64
 	Members []string
 }
+
+// Go does not support slices in map keys; therefore, use this separate struct
 type GroupKey struct {
 	Name    string
 	Passwd  string
