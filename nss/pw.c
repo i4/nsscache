@@ -18,8 +18,6 @@
  */
 
 #include <errno.h>
-#include <nss.h>
-#include <pwd.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +26,7 @@
 #include <pthread.h>
 
 #include "cash.h"
+#include "cash_nss.h"
 #include "file.h"
 #include "search.h"
 
