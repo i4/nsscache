@@ -18,8 +18,10 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -28,6 +30,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr,
 			"usage: %[1]s [options] fetch <config>\n"+
+				"usage: %[1]s [options] convert <type> <src> <dst>\n"+
 				"",
 			os.Args[0])
 		flag.PrintDefaults()
@@ -59,6 +62,49 @@ func main() {
 			log.Fatal(err)
 		}
 		err = WriteStateIfChanged(cfg.StatePath, state)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
+
+	case "convert":
+		if len(args) != 4 {
+			break
+		}
+
+		var t FileType
+		err := t.UnmarshalText([]byte(args[1]))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		src, err := ioutil.ReadFile(args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+		pws, err := ParsePasswds(bytes.NewReader(src))
+		if err != nil {
+			log.Fatal(err)
+		}
+		var x bytes.Buffer
+		err = SerializePasswds(&x, pws)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// We must create the file first or deployFile() will abort
+		f, err := os.Create(args[3])
+		if err != nil {
+			log.Fatal(err)
+		}
+		f.Close()
+
+		err = deployFile(&File{
+			Type: t,
+			Url:  args[2],
+			Path: args[3],
+			body: x.Bytes(),
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
