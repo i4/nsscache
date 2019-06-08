@@ -42,6 +42,7 @@ type FileType int
 const (
 	FileTypePlain FileType = iota
 	FileTypePasswd
+	FileTypeGroup
 )
 
 func (t *FileType) UnmarshalText(text []byte) error {
@@ -50,6 +51,8 @@ func (t *FileType) UnmarshalText(text []byte) error {
 		*t = FileTypePlain
 	case "passwd":
 		*t = FileTypePasswd
+	case "group":
+		*t = FileTypeGroup
 	default:
 		return fmt.Errorf("invalid file type %q", text)
 	}

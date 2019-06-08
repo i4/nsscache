@@ -31,6 +31,9 @@
 #ifndef NSSCASH_PASSWD_FILE
 # define NSSCASH_PASSWD_FILE "/etc/passwd.nsscash"
 #endif
+#ifndef NSSCASH_GROUP_FILE
+# define NSSCASH_GROUP_FILE "/etc/group.nsscash"
+#endif
 
 
 // Global structs

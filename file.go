@@ -92,6 +92,22 @@ func fetchFile(file *File, state *State) error {
 		}
 		file.body = x.Bytes()
 
+	} else if file.Type == FileTypeGroup {
+		grs, err := ParseGroups(bytes.NewReader(body))
+		if err != nil {
+			return err
+		}
+		if len(grs) == 0 {
+			return fmt.Errorf("refusing to use empty group file")
+		}
+
+		var x bytes.Buffer
+		err = SerializeGroups(&x, grs)
+		if err != nil {
+			return err
+		}
+		file.body = x.Bytes()
+
 	} else {
 		return fmt.Errorf("unsupported file type %v", file.Type)
 	}

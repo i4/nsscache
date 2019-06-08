@@ -94,6 +94,15 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+		} else if t == FileTypeGroup {
+			grs, err := ParseGroups(bytes.NewReader(src))
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = SerializeGroups(&x, grs)
+			if err != nil {
+				log.Fatal(err)
+			}
 		} else {
 			log.Fatalf("unsupported file type %v", t)
 		}
