@@ -22,6 +22,98 @@ nsscash is licensed under AGPL version 3 or later.
 [1] https://github.com/google/nsscache
 
 
+== REQUIREMENTS
+
+- Go, for `nsscash`
+  - github.com/pkg/errors
+  - github.com/BurntSushi/toml
+- C compiler, for `libnss_cash.so.2`
+
+
+== USAGE
+
+Install `libnss_cash.so.2` somewhere in your library search path (see
+`/etc/ld.so.conf`), e.g. `/usr/lib/x86_64-linux-gnu/`.
+
+Update `/etc/nsswitch.conf` to include the cash module; `passwd` and `group`
+are currently supported. For example:
+
+    passwd:         files cash
+    group:          files cash
+    [...]
+
+Create the cache files with the proper permissions (`nsscash fetch` won't
+create new files to prevent using incorrect permissions):
+
+    touch /etc/passwd.nsscash
+    touch /etc/group.nsscash
+    chmod 0644 /etc/passwd.nsscash
+    chmod 0644 /etc/group.nsscash
+
+Configure the `nsscash` configuration file `nsscash.toml`, see below.
+
+Then start `nsscash`:
+
+    nsscash fetch /path/to/config/nsscash.toml
+
+This will fetch the configured files and update the local caches. The files
+are atomically overwritten (via temporary file, sync, and rename).
+
+Verify the users/groups are available, e.g. with `getent`. If everything
+works, remember to reboot the host as changes to `nsswitch.conf` don't affect
+running processes!
+
+Now configure `nsscash` to run regularly, for example via cron or a systemd
+timer.
+
+=== CONFIGURATION
+
+Nsscash is configured through a simple configuration file written in TOML. A
+typical configuration looks like this:
+
+    statepath = "/var/lib/nsscash/state.json"
+
+    [[file]]
+    type = "passwd"
+    url = "https://example.org/passwd"
+    path = "/etc/passwd.nsscash"
+
+    [[file]]
+    type = "group"
+    url = "https://example.org/group"
+    path = "/etc/group.nsscash"
+
+    // Optional, but useful to deploy files which are not supported by the
+    // nsscash NSS module, but by libc's "files" NSS module. nsscash takes
+    // care of the atomic replacement and updates; an "netgroup: files" entry
+    // in "/etc/nsswitch.conf" makes the netgroups available.
+    [[file]]
+    type = "plain"
+    url = "https://example.org/netgroup"
+    path = "/etc/netgroup"
+
+The following global keys are available:
+
+- `statepath`: Path to a JSON file which stores the last modification time of
+  each file; automatically updated by `nsswitch`. Used to fetch data only when
+  something has changed to reduce the required traffic.
+
+Each `file` block describes a single file to download/write. The following
+keys are available:
+
+- `type`: Type of this file; can be either `passwd` (for files in
+  `/etc/passwd` format), `group` (for files in `/etc/group` format), or
+  `plain` (arbitrary format). Only `passwd` and `group` files are supported by
+  the nsscash NSS module. But, as explained above, `plain` can be used to
+  distribute arbitrary files. The type is required as the `.nsscash` files are
+  pre processed for faster lookups and simpler code which requires a known
+  format.
+
+- `url`: URL to fetch the file from; HTTP and HTTPS are supported
+
+- `path`: Path to store the retrieved file
+
+
 == AUTHORS
 
 Written by Simon Ruderich <simon@ruderich.org>.
