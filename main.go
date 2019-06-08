@@ -54,17 +54,14 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		err = handleFiles(cfg, state)
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		err = WriteStateIfChanged(cfg.StatePath, state)
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		return
 	}
 
