@@ -86,14 +86,14 @@ func main() {
 		if t == FileTypePlain {
 			x.Write(src)
 		} else if t == FileTypePasswd {
-		pws, err := ParsePasswds(bytes.NewReader(src))
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = SerializePasswds(&x, pws)
-		if err != nil {
-			log.Fatal(err)
-		}
+			pws, err := ParsePasswds(bytes.NewReader(src))
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = SerializePasswds(&x, pws)
+			if err != nil {
+				log.Fatal(err)
+			}
 		} else {
 			log.Fatalf("unsupported file type %v", t)
 		}
