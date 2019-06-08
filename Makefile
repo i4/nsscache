@@ -7,4 +7,8 @@ all:
 clean:
 	rm -f nsscash filetype_string.go
 
-.PHONY: all clean
+test:
+	go build # we need ./nsscash
+	$(MAKE) --no-print-directory -C nss test
+
+.PHONY: all clean test
