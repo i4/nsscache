@@ -82,14 +82,20 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		var x bytes.Buffer
+		if t == FileTypePlain {
+			x.Write(src)
+		} else if t == FileTypePasswd {
 		pws, err := ParsePasswds(bytes.NewReader(src))
 		if err != nil {
 			log.Fatal(err)
 		}
-		var x bytes.Buffer
 		err = SerializePasswds(&x, pws)
 		if err != nil {
 			log.Fatal(err)
+		}
+		} else {
+			log.Fatalf("unsupported file type %v", t)
 		}
 
 		// We must create the file first or deployFile() will abort
