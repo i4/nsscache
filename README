@@ -1,0 +1,49 @@
+= README
+
+Nsscash (a pun on cache) is a simple file-based cache for NSS similar to
+nsscache [1]. The goal is to distribute users/groups/etc. to multiple systems
+without having to rely on a (single) stable server. Traditional systems like
+LDAP or NIS require a stable server or users/groups cannot be resolved. By
+distributing the data to all systems, temporary outages of the server cause no
+issues on the clients. In addition the local storage is much faster than
+remote network access. To update the local caches polling via HTTP is
+performed, for example every minute, only downloading new data if anything has
+changed.
+
+Nsscash consists of two parts: `nsscash`, written in Go, which downloads files
+via HTTP or HTTPS, parses them, creates indices and writes the result to a
+local file. The second part is the NSS module (`libnss_cash.so.2`), written in
+C, which provides integration via `/etc/nsswitch.conf`. It's specifically
+designed to be very simple and uses the prepared data for lookups. To support
+quick lookups, in O(log n), the files utilize indices.
+
+nsscash is licensed under AGPL version 3 or later.
+
+[1] https://github.com/google/nsscache
+
+
+== AUTHORS
+
+Written by Simon Ruderich <simon@ruderich.org>.
+
+
+== LICENSE
+
+This program is licensed under AGPL version 3 or later.
+
+Copyright (C) 2019  Simon Ruderich
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// vim: ft=asciidoc
