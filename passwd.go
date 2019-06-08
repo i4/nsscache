@@ -137,7 +137,7 @@ func SerializePasswd(p Passwd) []byte {
 	l := res.Len()
 	if l%8 != 0 {
 		for i := 0; i < 8-l%8; i++ {
-			res.Write([]byte{'0'})
+			res.WriteByte(0)
 		}
 	}
 
