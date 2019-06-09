@@ -14,8 +14,8 @@ Nsscash consists of two parts: `nsscash`, written in Go, which downloads files
 via HTTP or HTTPS, parses them, creates indices and writes the result to a
 local file. The second part is the NSS module (`libnss_cash.so.2`), written in
 C, which provides integration via `/etc/nsswitch.conf`. It's specifically
-designed to be very simple and uses the prepared data for lookups. To support
-quick lookups, in O(log n), the files utilize indices.
+designed to be very simple and uses the data prepared by `nsscash` for
+lookups. To support quick lookups, in O(log n), the files utilize indices.
 
 nsscash is licensed under AGPL version 3 or later.
 
@@ -95,7 +95,7 @@ typical configuration looks like this:
 The following global keys are available:
 
 - `statepath`: Path to a JSON file which stores the last modification time of
-  each file; automatically updated by `nsswitch`. Used to fetch data only when
+  each file; automatically updated by `nsscash`. Used to fetch data only when
   something has changed to reduce the required traffic.
 
 Each `file` block describes a single file to download/write. The following
