@@ -26,8 +26,8 @@ libnss_cash.so.2 libcash_test.so: $(wildcard *.c) $(wildcard *.h)
 # Tests
 
 test: tests/gr tests/pw tests/group.nsscash tests/passwd.nsscash
-	LD_LIBRARY_PATH=. LD_PRELOD= ./tests/gr
-	LD_LIBRARY_PATH=. LD_PRELOD= ./tests/pw
+	LD_LIBRARY_PATH=. LD_PRELOAD= ./tests/gr
+	LD_LIBRARY_PATH=. LD_PRELOAD= ./tests/pw
 
 tests/%: tests/%.c libcash_test.so
 	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) \
