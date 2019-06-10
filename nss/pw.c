@@ -151,7 +151,7 @@ static enum nss_status internal_getpw(struct search_key *key, struct passwd *res
         return NSS_STATUS_NOTFOUND;
     }
 
-    const char *e = h->data + h->off_data + *off;
+    const char *e = key->data + *off;
     if (!entry_to_passwd((struct passwd_entry *)e, result, buffer, buflen)) {
         unmap_file(&f);
         errno = ERANGE;

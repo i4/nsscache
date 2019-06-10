@@ -165,7 +165,7 @@ static enum nss_status internal_getgr(struct search_key *key, struct group *resu
         return NSS_STATUS_NOTFOUND;
     }
 
-    const char *e = h->data + h->off_data + *off;
+    const char *e = key->data + *off;
     if (!entry_to_group((struct group_entry *)e, result, buffer, buflen)) {
         unmap_file(&f);
         errno = ERANGE;
