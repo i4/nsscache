@@ -50,6 +50,6 @@ static int bsearch_callback(const void *x, const void *y) {
     }
 }
 
-uint64_t *search(struct search_key *key, const void *index, uint64_t count) {
+uint64_t *search(const struct search_key *key, const void *index, uint64_t count) {
     return bsearch(key, index, count, sizeof(uint64_t), bsearch_callback);
 }

@@ -31,6 +31,6 @@ struct search_key {
     uint64_t offset;
 };
 
-uint64_t *search(struct search_key *key, const void *index, uint64_t count) __attribute__((visibility("hidden")));
+uint64_t *search(const struct search_key *key, const void *index, uint64_t count) __attribute__((visibility("hidden")));
 
 #endif
