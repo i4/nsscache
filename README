@@ -17,6 +17,22 @@ C, which provides integration via `/etc/nsswitch.conf`. It's specifically
 designed to be very simple and uses the data prepared by `nsscash` for
 lookups. To support quick lookups, in O(log n), the files utilize indices.
 
+Nsscash is very careful when deploying the changes:
+- All files are updated using the standard "write to temporary file", "sync",
+  "rename" steps which is atomic on UNIX file systems.
+- All errors cause an immediate abort ("fail fast") with a proper error
+  message and a non-zero exit status. This prevents hiding possibly important
+  errors. In addition all files are fetched first and then deployed to try to
+  prevent inconsistent state if only one file can be downloaded. The state
+  file (containing last file modifications) is only updated when all
+  operations were successful.
+- To prevent unexpected permissions, `nsscash` does not create new files. The
+  user must create them first and `nsscash` will then re-use the permissions
+  and owner/group when updating the file (see examples below).
+- To prevent misconfigurations, empty files (no users/groups) are not
+  permitted and will not be written to disk. This is designed to prevent the
+  accidental loss of all users/groups on a system.
+
 nsscash is licensed under AGPL version 3 or later.
 
 [1] https://github.com/google/nsscache
@@ -28,6 +44,10 @@ nsscash is licensed under AGPL version 3 or later.
   - github.com/pkg/errors
   - github.com/BurntSushi/toml
 - C compiler, for `libnss_cash.so.2`
+
+Tested on Debian Stretch and Buster, but should work on any GNU/Linux system.
+With adapations to the NSS module it should work on any UNIX-like system which
+uses NSS.
 
 
 == USAGE
