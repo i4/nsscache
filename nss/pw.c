@@ -36,18 +36,18 @@ struct passwd_entry {
     uint64_t uid;
     uint64_t gid;
 
-    //       off_name = 0
+    //       off_name = 0, not stored on disk
     uint16_t off_passwd;
     uint16_t off_gecos;
     uint16_t off_dir;
     uint16_t off_shell;
 
-    uint16_t data_size;
     /*
      * Data contains all strings (name, passwd, gecos, dir, shell)
      * concatenated, with their trailing NUL. The off_* variables point to
      * beginning of each string.
      */
+    uint16_t data_size; // size of data in bytes
     const char data[];
 } __attribute__((packed));
 

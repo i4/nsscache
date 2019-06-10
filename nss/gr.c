@@ -35,7 +35,7 @@
 struct group_entry {
     uint64_t gid;
 
-    //       off_name = 0
+    //       off_name = 0, not stored on disk
     uint16_t off_passwd;
     uint16_t off_mem_off;
 
@@ -51,11 +51,12 @@ struct group_entry {
      *
      * All offsets are relative to the beginning of data.
      */
-    uint16_t data_size;
+    uint16_t data_size; // size of data in bytes
     const char data[];
 } __attribute__((packed));
 
 static bool entry_to_group(const struct group_entry *e, struct group *g, char *tmp, size_t space) {
+    // Space required for the gr_mem array
     const size_t mem_size = (size_t)(e->mem_count + 1) * sizeof(char *);
 
     if (space < e->data_size + mem_size) {

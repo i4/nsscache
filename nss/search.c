@@ -26,15 +26,15 @@
 static int bsearch_callback(const void *x, const void *y) {
     const struct search_key *key = x;
 
-    uint64_t offset = *(const uint64_t *)y;
+    uint64_t offset = *(const uint64_t *)y; // from index
     const void *member = (const char *)key->data + offset + key->offset;
 
-    // Lookup by name
+    // Lookup by name (char *)
     if (key->name != NULL) {
         const char *name = member;
         return strcmp(key->name, name);
 
-    // Lookup by ID
+    // Lookup by ID (uint64_t)
     } else if (key->id != NULL) {
         const uint64_t *id = member;
         if (*key->id < *id) {
@@ -50,6 +50,7 @@ static int bsearch_callback(const void *x, const void *y) {
     }
 }
 
+// search performs a binary search on an index, described by key and index.
 uint64_t *search(const struct search_key *key, const void *index, uint64_t count) {
     return bsearch(key, index, count, sizeof(uint64_t), bsearch_callback);
 }

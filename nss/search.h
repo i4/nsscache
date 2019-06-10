@@ -24,10 +24,15 @@
 
 
 struct search_key {
-    const char *name;
-    const uint64_t *id;
+    const char *name; // if name != NULL search for a string
+    const uint64_t *id; // if name == NULL search for an id
 
+    // The actual data with all entries; this is where the full entry
+    // including name/id is located (the index holds an offset into data for
+    // each entry)
     const void *data;
+    // Static offset to the search key (name/id) inside the entry; after it
+    // was located by using the index's offset into data
     uint64_t offset;
 };
 

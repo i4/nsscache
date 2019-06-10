@@ -41,8 +41,9 @@ bool map_file(const char *path, struct file *f) {
     if (fstat(f->fd, &s)) {
         goto fail;
     }
-    f->size = (size_t)s.st_size;
+    f->size = (size_t)s.st_size; // for munmap()
 
+    // mmap is used for speed and simple random access
     void *x = mmap(NULL, f->size, PROT_READ, MAP_PRIVATE, f->fd, 0);
     if (x == MAP_FAILED) {
         goto fail;

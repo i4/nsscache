@@ -25,6 +25,8 @@
 #include <stdlib.h>
 
 
+// Magic value at the beginning of each nsscash file (8 byte, without the
+// trailing NUL)
 #define MAGIC "NSS-CASH"
 
 // Defined in Makefile
@@ -36,11 +38,13 @@
 #endif
 
 
+// header describes the on-disk (and, after loading via mmap, in-memory)
+// structure of nsscash files.
 struct header {
     char magic[8]; // magic string
     uint64_t version; // also doubles as byte-order check
 
-    uint64_t count;
+    uint64_t count; // number of entries in this file
 
     // All offsets are relative to data
     uint64_t off_orig_index;
@@ -51,6 +55,7 @@ struct header {
     char data[];
 } __attribute__((packed));
 
+// file represents an open nsscash file.
 struct file {
     int fd;
     size_t size;
