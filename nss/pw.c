@@ -48,7 +48,7 @@ struct passwd_entry {
      * concatenated, with their trailing NUL. The off_* variables point to
      * beginning of each string.
      */
-    char data[];
+    const char data[];
 } __attribute__((packed));
 
 static bool entry_to_passwd(const struct passwd_entry *e, struct passwd *p, char *tmp, size_t space) {

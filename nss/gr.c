@@ -52,7 +52,7 @@ struct group_entry {
      * All offsets are relative to the beginning of data.
      */
     uint16_t data_size;
-    char data[];
+    const char data[];
 } __attribute__((packed));
 
 static bool entry_to_group(const struct group_entry *e, struct group *g, char *tmp, size_t space) {
