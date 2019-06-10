@@ -134,12 +134,7 @@ func SerializePasswd(p Passwd) []byte {
 	res.Write(data.Bytes())
 	// We must pad each entry so that all uint64 at the beginning of the
 	// struct are 8 byte aligned
-	l := res.Len()
-	if l%8 != 0 {
-		for i := 0; i < 8-l%8; i++ {
-			res.WriteByte(0)
-		}
-	}
+	alignBufferTo(&res, 8)
 
 	return res.Bytes()
 }

@@ -114,10 +114,7 @@ func SerializeGroup(g Group) []byte {
 	offPasswd := uint16(data.Len())
 	data.Write([]byte(g.Passwd))
 	data.WriteByte(0)
-	// Padding to align the following uint16
-	if data.Len()%2 != 0 {
-		data.WriteByte(0)
-	}
+	alignBufferTo(&data, 2) // align the following uint16
 	offMemOff := uint16(data.Len())
 	// Offsets for group members
 	offMem := offMemOff + 2*uint16(len(mems_off))
@@ -154,12 +151,7 @@ func SerializeGroup(g Group) []byte {
 	res.Write(data.Bytes())
 	// We must pad each entry so that all uint64 at the beginning of the
 	// struct are 8 byte aligned
-	l := res.Len()
-	if l%8 != 0 {
-		for i := 0; i < 8-l%8; i++ {
-			res.WriteByte(0)
-		}
-	}
+	alignBufferTo(&res, 8)
 
 	return res.Bytes()
 }
