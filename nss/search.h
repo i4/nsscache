@@ -27,8 +27,8 @@ struct search_key {
     const char *name;
     const uint64_t *id;
 
-    uint64_t offset;
     const void *data;
+    uint64_t offset;
 };
 
 uint64_t *search(struct search_key *key, const void *index, uint64_t count) __attribute__((visibility("hidden")));
