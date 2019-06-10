@@ -45,7 +45,7 @@ type GroupKey struct {
 	Name    string
 	Passwd  string
 	Gid     uint64
-	Members string
+	Members string // "," separated
 }
 
 func toKey(g Group) GroupKey {
@@ -58,7 +58,7 @@ func toKey(g Group) GroupKey {
 }
 
 // ParseGroups parses a file in the format of /etc/group and returns all
-// entries as Group structs.
+// entries as slice of Group structs.
 func ParseGroups(r io.Reader) ([]Group, error) {
 	var res []Group
 

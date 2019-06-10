@@ -44,7 +44,7 @@ type Passwd struct {
 }
 
 // ParsePasswds parses a file in the format of /etc/passwd and returns all
-// entries as Passwd structs.
+// entries as slice of Passwd structs.
 func ParsePasswds(r io.Reader) ([]Passwd, error) {
 	var res []Passwd
 

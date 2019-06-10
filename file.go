@@ -31,6 +31,11 @@ import (
 )
 
 func handleFiles(cfg *Config, state *State) error {
+	// Split into fetch and deploy phase to prevent updates of only some
+	// files which might lead to inconsistent state; obviously this won't
+	// work during the deploy phase, but it helps if the web server fails
+	// to deliver some files
+
 	for i, f := range cfg.Files {
 		err := fetchFile(&cfg.Files[i], state)
 		if err != nil {
@@ -135,7 +140,8 @@ func deployFile(file *File) error {
 	defer os.Remove(f.Name())
 	defer f.Close()
 
-	// Apply permissions/user/group from the target file
+	// Apply permissions/user/group from the target file, use Stat instead
+	// of Lstat as only the target's permissions are relevant
 	stat, err := os.Stat(file.Path)
 	if err != nil {
 		// We do not create the path if it doesn't exist, because we
