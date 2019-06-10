@@ -54,9 +54,9 @@ struct header {
 struct file {
     int fd;
     size_t size;
-    uint64_t next_index; // used by getpwent (pw.c)
 
     const struct header *header;
+    uint64_t next_index; // used by getpwent (pw.c)
 };
 
 bool map_file(const char *path, struct file *f) __attribute__((visibility("hidden")));
