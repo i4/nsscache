@@ -154,9 +154,9 @@ static enum nss_status internal_getgr(struct search_key *key, struct group *resu
     const struct header *h = f.header;
 
     key->data = h->data + h->off_data;
-    uint64_t off_index = (key->id != NULL)
-                       ? h->off_id_index
-                       : h->off_name_index;
+    uint64_t off_index = (key->name != NULL)
+                       ? h->off_name_index
+                       : h->off_id_index;
     uint64_t *off = search(key, h->data + off_index, h->count);
     if (off == NULL) {
         unmap_file(&f);
