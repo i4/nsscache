@@ -31,10 +31,7 @@
 
 bool map_file(const char *path, struct file *f) {
     // Fully initialize the struct for unmap_file() and other users
-    f->fd = -1;
-    f->size = 0;
-    f->next_index = 0;
-    f->header = NULL;
+    memset(f, 0, sizeof(*f));
 
     f->fd = open(path, O_RDONLY | O_CLOEXEC);
     if (f->fd < 0) {
@@ -81,7 +78,7 @@ void unmap_file(struct file *f) {
         munmap((void *)f->header, f->size);
         f->header = NULL;
     }
-    if (f->fd != -1) {
+    if (f->fd >= 0) {
         close(f->fd);
         f->fd = -1;
     }
