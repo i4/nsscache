@@ -24,8 +24,32 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "cash.h"
 
+#define MAGIC "NSS-CASH"
+
+// Defined in Makefile
+#ifndef NSSCASH_PASSWD_FILE
+# define NSSCASH_PASSWD_FILE "/etc/passwd.nsscash"
+#endif
+#ifndef NSSCASH_GROUP_FILE
+# define NSSCASH_GROUP_FILE "/etc/group.nsscash"
+#endif
+
+
+struct header {
+    char magic[8]; // magic string
+    uint64_t version; // also doubles as byte-order check
+
+    uint64_t count;
+
+    // All offsets are relative to data
+    uint64_t off_orig_index;
+    uint64_t off_id_index;
+    uint64_t off_name_index;
+    uint64_t off_data;
+
+    char data[];
+} __attribute__((packed));
 
 struct file {
     int fd;
