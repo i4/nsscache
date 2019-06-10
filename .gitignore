@@ -1,8 +1,8 @@
 /filetype_string.go
-/nss/libcash_test.so
 /nss/libnss_cash.so.2
 /nss/tests/gr
 /nss/tests/group.nsscash
+/nss/tests/libcash_test.so
 /nss/tests/passwd.nsscash
 /nss/tests/pw
 /nsscash
