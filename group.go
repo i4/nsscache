@@ -62,9 +62,15 @@ func toKey(g Group) GroupKey {
 func ParseGroups(r io.Reader) ([]Group, error) {
 	var res []Group
 
-	s := bufio.NewScanner(r)
-	for s.Scan() {
-		t := s.Text()
+	s := bufio.NewReader(r)
+	for {
+		t, err := s.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
 
 		x := strings.Split(t, ":")
 		if len(x) != 4 {
@@ -75,6 +81,9 @@ func ParseGroups(r io.Reader) ([]Group, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, "invalid gid in line %q", t)
 		}
+
+		// ReadString() contains the delimiter
+		x[3] = strings.TrimSuffix(x[3], "\n")
 
 		var members []string
 		// No members must result in empty slice, not slice with the
@@ -88,10 +97,6 @@ func ParseGroups(r io.Reader) ([]Group, error) {
 			Gid:     gid,
 			Members: members,
 		})
-	}
-	err := s.Err()
-	if err != nil {
-		return nil, err
 	}
 
 	return res, nil

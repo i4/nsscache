@@ -48,9 +48,15 @@ type Passwd struct {
 func ParsePasswds(r io.Reader) ([]Passwd, error) {
 	var res []Passwd
 
-	s := bufio.NewScanner(r)
-	for s.Scan() {
-		t := s.Text()
+	s := bufio.NewReader(r)
+	for {
+		t, err := s.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
 
 		x := strings.Split(t, ":")
 		if len(x) != 7 {
@@ -73,14 +79,10 @@ func ParsePasswds(r io.Reader) ([]Passwd, error) {
 			Gid:    gid,
 			Gecos:  x[4],
 			Dir:    x[5],
-			Shell:  x[6],
+			// ReadString() contains the delimiter
+			Shell: strings.TrimSuffix(x[6], "\n"),
 		})
 	}
-	err := s.Err()
-	if err != nil {
-		return nil, err
-	}
-
 	return res, nil
 }
 
