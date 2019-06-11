@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../cash_nss.h"
 
@@ -312,10 +313,89 @@ static void test_getpwnam(void) {
     assert(rename("tests/passwd.nsscash.tmp", "tests/passwd.nsscash") == 0);
 }
 
+static void test_limits(void) {
+    char gecos[65508];
+    memset(gecos, 'X', sizeof(gecos));
+    gecos[sizeof(gecos)-1] = '\0';
+
+    int r;
+    FILE *fh;
+
+    const char *nsscache_cmd = "../nsscash convert passwd "
+        "tests/limits tests/limits.nsscash 2> /dev/null";
+
+    // Entries which will not fit in uint16_t, nsscash must abort
+
+    fh = fopen("tests/limits", "w");
+    assert(fh != NULL);
+    r = fprintf(fh, "test:xx:42:4711:%s:/home/test:/bin/zsh\n", gecos);
+    assert(r == 65544);
+    r = fclose(fh);
+    assert(r == 0);
+
+    r = system(nsscache_cmd);
+    assert(r != -1);
+    assert(WIFEXITED(r) && WEXITSTATUS(r) == 1);
+
+    fh = fopen("tests/limits", "w");
+    assert(fh != NULL);
+    r = fprintf(fh, "test:%s:42:4711:%s:/home/test:/bin/zsh\n", gecos, gecos);
+    assert(r == 131049);
+    r = fclose(fh);
+    assert(r == 0);
+
+    r = system(nsscache_cmd);
+    assert(r != -1);
+    assert(WIFEXITED(r) && WEXITSTATUS(r) == 1);
+
+    // Largest entry which will fit
+
+    fh = fopen("tests/limits", "w");
+    assert(fh != NULL);
+    r = fprintf(fh, "test:x:42:4711:%s:/home/test:/bin/zsh\n", gecos);
+    assert(r == 65543);
+    r = fclose(fh);
+    assert(r == 0);
+
+    r = system(nsscache_cmd);
+    assert(r != -1);
+    assert(WIFEXITED(r) && WEXITSTATUS(r) == 0);
+
+    r = rename("tests/passwd.nsscash", "tests/passwd.nsscash.tmp");
+    assert(r == 0);
+    r = rename("tests/limits.nsscash", "tests/passwd.nsscash");
+    assert(r == 0);
+
+    // Check if the entry can be retrieved
+
+    struct passwd p;
+    enum nss_status s;
+    char tmp[4+1 + 1+1 + 65508 + 10+1 + 8+1];
+    int errnop = 0;
+
+    s = _nss_cash_getpwuid_r(42, &p, tmp, sizeof(tmp), &errnop);
+    assert(s == NSS_STATUS_SUCCESS);
+    assert(!strcmp(p.pw_name, "test"));
+    assert(!strcmp(p.pw_passwd, "x"));
+    assert(p.pw_uid == 42);
+    assert(p.pw_gid == 4711);
+    assert(!strcmp(p.pw_gecos, gecos));
+    assert(!strcmp(p.pw_dir, "/home/test"));
+    assert(!strcmp(p.pw_shell, "/bin/zsh"));
+
+    r = rename("tests/passwd.nsscash.tmp", "tests/passwd.nsscash");
+    assert(r == 0);
+
+    r = unlink("tests/limits");
+    assert(r == 0);
+}
+
 int main(void) {
     test_getpwent();
     test_getpwuid();
     test_getpwnam();
+
+    test_limits();
 
     return EXIT_SUCCESS;
 }

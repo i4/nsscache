@@ -23,6 +23,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -103,6 +104,11 @@ func SerializePasswd(p Passwd) ([]byte, error) {
 	offShell := uint16(data.Len())
 	data.Write([]byte(p.Shell))
 	data.WriteByte(0)
+	// Ensure the offsets can fit the length of this entry
+	if data.Len() > math.MaxUint16 {
+		return nil, fmt.Errorf("passwd too large to serialize: %v, %v",
+			data.Len(), p)
+	}
 	size := uint16(data.Len())
 
 	var res bytes.Buffer // serialized result

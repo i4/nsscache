@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../cash_nss.h"
 
@@ -319,10 +320,115 @@ static void test_getgrnam(void) {
     assert(rename("tests/group.nsscash.tmp", "tests/group.nsscash") == 0);
 }
 
+static void test_limits(void) {
+    char large_member[65525];
+    memset(large_member, 'X', sizeof(large_member));
+    large_member[sizeof(large_member)-1] = '\0';
+
+    char many_members[54603]; // 5461 members
+    memset(many_members, 'X', sizeof(many_members));
+    for (int i = 9; i < (int)sizeof(many_members); i += 10) {
+        many_members[i-1] = (char)('A' + i % ('Z' - 'A'));
+        many_members[i] = ',';
+    }
+    many_members[sizeof(many_members)-1] = '\0';
+
+    int r;
+    FILE *fh;
+
+    const char *nsscache_cmd = "../nsscash convert group "
+        "tests/limits tests/limits.nsscash 2> /dev/null";
+
+    // Entries which will not fit in uint16_t, nsscash must abort
+
+    fh = fopen("tests/limits", "w");
+    assert(fh != NULL);
+    r = fprintf(fh, "test:x:42:A%s\n", large_member);
+    assert(r == 65536);
+    r = fclose(fh);
+    assert(r == 0);
+
+    r = system(nsscache_cmd);
+    assert(r != -1);
+    assert(WIFEXITED(r) && WEXITSTATUS(r) == 1);
+
+    fh = fopen("tests/limits", "w");
+    assert(fh != NULL);
+    r = fprintf(fh, "many:x:4711:%s%s\n", many_members, many_members);
+    assert(r == 109217);
+    r = fclose(fh);
+    assert(r == 0);
+
+    r = system(nsscache_cmd);
+    assert(r != -1);
+    assert(WIFEXITED(r) && WEXITSTATUS(r) == 1);
+
+    // Largest entries which will fit
+
+    fh = fopen("tests/limits", "w");
+    assert(fh != NULL);
+    r = fprintf(fh, "test:x:42:%s\n", large_member);
+    assert(r == 65535);
+    r = fprintf(fh, "many:x:4711:%s\n", many_members);
+    assert(r == 54615);
+    r = fclose(fh);
+    assert(r == 0);
+
+    r = system(nsscache_cmd);
+    assert(r != -1);
+    assert(WIFEXITED(r) && WEXITSTATUS(r) == 0);
+
+    r = rename("tests/group.nsscash", "tests/group.nsscash.tmp");
+    assert(r == 0);
+    r = rename("tests/limits.nsscash", "tests/group.nsscash");
+    assert(r == 0);
+
+    // Check if the entry can be retrieved
+
+    struct group g;
+    enum nss_status s;
+    char tmp[sizeof(char **) + 1*sizeof(char *) + 1*sizeof(uint16_t) +
+             4+1 + 1+1 + 65525 + 1];
+    char tmp2[sizeof(char **) + 5462*sizeof(char *) + 5462*sizeof(uint16_t) +
+             4+1 + 1+1 + 54603 + 1];
+    int errnop = 0;
+
+    s = _nss_cash_getgrgid_r(42, &g, tmp, sizeof(tmp), &errnop);
+    assert(s == NSS_STATUS_SUCCESS);
+    assert(!strcmp(g.gr_name, "test"));
+    assert(g.gr_gid == 42);
+    assert(g.gr_mem != NULL);
+    assert(!strcmp(g.gr_mem[0], large_member));
+    assert(g.gr_mem[1] == NULL);
+
+    s = _nss_cash_getgrgid_r(4711, &g, tmp2, sizeof(tmp2), &errnop);
+    assert(s == NSS_STATUS_SUCCESS);
+    assert(!strcmp(g.gr_name, "many"));
+    assert(g.gr_gid == 4711);
+    assert(g.gr_mem != NULL);
+    for (int i = 0; i < 5461-1; i++) {
+        char x[9+1];
+        memset(x, 'X', sizeof(x));
+        x[8] = (char)('A' + (i * 10 + 9) % ('Z' - 'A'));
+        x[9] = '\0';
+        assert(!strcmp(g.gr_mem[i], x));
+    }
+    assert(!strcmp(g.gr_mem[5461-1], "XX"));
+    assert(g.gr_mem[5461] == NULL);
+
+    r = rename("tests/group.nsscash.tmp", "tests/group.nsscash");
+    assert(r == 0);
+
+    r = unlink("tests/limits");
+    assert(r == 0);
+}
+
 int main(void) {
     test_getgrent();
     test_getgrgid();
     test_getgrnam();
+
+    test_limits();
 
     return EXIT_SUCCESS;
 }

@@ -26,6 +26,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"math"
 
 	"github.com/pkg/errors"
 )
@@ -130,6 +131,11 @@ func SerializeGroup(g Group) ([]byte, error) {
 	}
 	// And the group members concatenated as above
 	data.Write(mems.Bytes())
+	// Ensure the offsets can fit the length of this entry
+	if data.Len() > math.MaxUint16 {
+		return nil, fmt.Errorf("group too large to serialize: %v, %v",
+			data.Len(), g)
+	}
 	size := uint16(data.Len())
 
 	var res bytes.Buffer // serialized result

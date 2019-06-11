@@ -33,6 +33,15 @@ Nsscash is very careful when deploying the changes:
   permitted and will not be written to disk. This is designed to prevent the
   accidental loss of all users/groups on a system.
 
+The passwd/group files have the following size restrictions:
+- maximum number of entries: '2^64-1' (uint64_t)
+- maximum passwd entry size: 65543 bytes (including newline)
+- maximum group entry size: 65535 bytes (including newline, only one member)
+- maximum members per group: depends on the user name length,
+                             with 9 bytes per user: 5460 users
+- `nsscash` checks for these restrictions and aborts with an error if they are
+  violated
+
 nsscash is licensed under AGPL version 3 or later.
 
 [1] https://github.com/google/nsscache
