@@ -32,7 +32,7 @@ test: tests/gr tests/pw tests/group.nsscash tests/passwd.nsscash
 tests/%: tests/%.c tests/libcash_test.so
 	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) \
 		$(TEST_CFLAGS) $(TEST_LDFLAGS) -Ltests \
-		$< $(LDLIBS) -lcash_test -lasan
+		$< $(LDLIBS) -lcash_test
 
 tests/passwd.nsscash: tests/passwd
 	../nsscash convert passwd $< $@
