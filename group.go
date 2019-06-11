@@ -102,7 +102,7 @@ func ParseGroups(r io.Reader) ([]Group, error) {
 	return res, nil
 }
 
-func SerializeGroup(g Group) []byte {
+func SerializeGroup(g Group) ([]byte, error) {
 	le := binary.LittleEndian
 
 	// Concatenate all (NUL-terminated) strings and store the offsets
@@ -158,7 +158,7 @@ func SerializeGroup(g Group) []byte {
 	// struct are 8 byte aligned
 	alignBufferTo(&res, 8)
 
-	return res.Bytes()
+	return res.Bytes(), nil
 }
 
 func SerializeGroups(w io.Writer, grs []Group) error {
@@ -168,7 +168,11 @@ func SerializeGroups(w io.Writer, grs []Group) error {
 	for _, g := range grs {
 		// TODO: warn about duplicate entries
 		offsets[toKey(g)] = uint64(data.Len())
-		data.Write(SerializeGroup(g))
+		x, err := SerializeGroup(g)
+		if err != nil {
+			return err
+		}
+		data.Write(x)
 	}
 
 	// Copy to prevent sorting from modifying the argument

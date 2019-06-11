@@ -86,7 +86,7 @@ func ParsePasswds(r io.Reader) ([]Passwd, error) {
 	return res, nil
 }
 
-func SerializePasswd(p Passwd) []byte {
+func SerializePasswd(p Passwd) ([]byte, error) {
 	// Concatenate all (NUL-terminated) strings and store the offsets
 	var data bytes.Buffer
 	data.Write([]byte(p.Name))
@@ -138,7 +138,7 @@ func SerializePasswd(p Passwd) []byte {
 	// struct are 8 byte aligned
 	alignBufferTo(&res, 8)
 
-	return res.Bytes()
+	return res.Bytes(), nil
 }
 
 func SerializePasswds(w io.Writer, pws []Passwd) error {
@@ -148,7 +148,11 @@ func SerializePasswds(w io.Writer, pws []Passwd) error {
 	for _, p := range pws {
 		// TODO: warn about duplicate entries
 		offsets[p] = uint64(data.Len())
-		data.Write(SerializePasswd(p))
+		x, err := SerializePasswd(p)
+		if err != nil {
+			return err
+		}
+		data.Write(x)
 	}
 
 	// Copy to prevent sorting from modifying the argument
