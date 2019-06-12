@@ -23,10 +23,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
-	"math"
 
 	"github.com/pkg/errors"
 )
