@@ -1,6 +1,6 @@
 all:
-	go generate ./...
-	go vet ./...
+	go generate
+	go vet
 	go build
 	$(MAKE) --no-print-directory -C nss all
 
@@ -10,7 +10,7 @@ clean:
 
 test:
 	go build # we need ./nsscash
-	go test ./...
+	go test
 	$(MAKE) --no-print-directory -C nss test
 
 .PHONY: all clean test
