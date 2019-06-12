@@ -112,10 +112,10 @@ typical configuration looks like this:
     url = "https://example.org/group"
     path = "/etc/group.nsscash"
 
-    // Optional, but useful to deploy files which are not supported by the
-    // nsscash NSS module, but by libc's "files" NSS module. nsscash takes
-    // care of the atomic replacement and updates; an "netgroup: files" entry
-    // in "/etc/nsswitch.conf" makes the netgroups available.
+    # Optional, but useful to deploy files which are not supported by the
+    # nsscash NSS module, but by libc's "files" NSS module. nsscash takes care
+    # of the atomic replacement and updates; an "netgroup: files" entry in
+    # "/etc/nsswitch.conf" makes the netgroups available.
     [[file]]
     type = "plain"
     url = "https://example.org/netgroup"
