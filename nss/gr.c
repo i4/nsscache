@@ -32,6 +32,8 @@
 
 // NOTE: This file is very similar to pw.c, keep in sync!
 
+// TODO: adapt offsets to 32 bit to fit more than 5000 users per group (for 9
+// byte user names)
 struct group_entry {
     uint64_t gid;
 
