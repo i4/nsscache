@@ -54,6 +54,11 @@ func ParsePasswds(r io.Reader) ([]Passwd, error) {
 		t, err := s.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
+				if t != "" {
+					return nil, fmt.Errorf(
+						"no newline in last line: %q",
+						t)
+				}
 				break
 			}
 			return nil, err

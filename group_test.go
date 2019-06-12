@@ -16,6 +16,7 @@
 package main
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -25,10 +26,17 @@ func TestParseGroups(t *testing.T) {
 	tests := []struct {
 		data string
 		exp  []Group
+		err  error
 	}{
 		{
 			"",
 			nil,
+			nil,
+		},
+		{
+			"root:x:0:",
+			nil,
+			fmt.Errorf("no newline in last line: \"root:x:0:\""),
 		},
 		{
 			"root:x:0:\n",
@@ -40,6 +48,7 @@ func TestParseGroups(t *testing.T) {
 					Members: nil,
 				},
 			},
+			nil,
 		},
 		{
 			"root:x:0:foo\n",
@@ -53,6 +62,7 @@ func TestParseGroups(t *testing.T) {
 					},
 				},
 			},
+			nil,
 		},
 		{
 			"root:x:0:foo,bar\n",
@@ -67,14 +77,15 @@ func TestParseGroups(t *testing.T) {
 					},
 				},
 			},
+			nil,
 		},
 	}
 
 	for n, tc := range tests {
 		res, err := ParseGroups(strings.NewReader(tc.data))
-		if err != nil {
+		if !reflect.DeepEqual(err, tc.err) {
 			t.Errorf("%d: err = %v, want %v",
-				n, res, nil)
+				n, err, tc.err)
 		}
 		if !reflect.DeepEqual(res, tc.exp) {
 			t.Errorf("%d: res = %v, want %v",
