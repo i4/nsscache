@@ -39,7 +39,7 @@ func handleFiles(cfg *Config, state *State) error {
 	for i, f := range cfg.Files {
 		err := fetchFile(&cfg.Files[i], state)
 		if err != nil {
-			return errors.Wrapf(err, "%q (%s)", f.Url, f.Type)
+			return errors.Wrapf(err, "%q (%v)", f.Url, f.Type)
 		}
 	}
 
@@ -51,7 +51,7 @@ func handleFiles(cfg *Config, state *State) error {
 
 		err := deployFile(&cfg.Files[i])
 		if err != nil {
-			return errors.Wrapf(err, "%q (%s)", f.Url, f.Type)
+			return errors.Wrapf(err, "%q (%v)", f.Url, f.Type)
 		}
 	}
 
