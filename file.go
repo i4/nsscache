@@ -19,6 +19,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha512"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -26,6 +28,7 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -58,8 +61,34 @@ func handleFiles(cfg *Config, state *State) error {
 	return nil
 }
 
+func checksumFile(file *File) (string, error) {
+	x, err := ioutil.ReadFile(file.Path)
+	if err != nil {
+		return "", err
+	}
+	return checksumBytes(x), nil
+}
+
+func checksumBytes(x []byte) string {
+	h := sha512.New()
+	h.Write(x)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 func fetchFile(file *File, state *State) error {
 	t := state.LastModified[file.Url]
+
+	hash, err := checksumFile(file)
+	if err != nil {
+		// See below in deployFile() for the reason
+		return errors.Wrapf(err, "file.path %q must exist", file.Path)
+	}
+	if hash != state.Checksum[file.Url] {
+		log.Printf("%q -> %q: hash has changed", file.Url, file.Path)
+		var zero time.Time
+		t = zero // force download
+	}
+
 	status, body, err := fetchIfModified(file.Url, &t)
 	if err != nil {
 		return err
@@ -116,6 +145,8 @@ func fetchFile(file *File, state *State) error {
 	} else {
 		return fmt.Errorf("unsupported file type %v", file.Type)
 	}
+
+	state.Checksum[file.Url] = checksumBytes(file.body)
 	return nil
 }
 

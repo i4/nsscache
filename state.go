@@ -26,7 +26,9 @@ import (
 )
 
 type State struct {
+	// Key is File.Url
 	LastModified map[string]time.Time
+	Checksum     map[string]string // SHA512 in hex
 }
 
 func LoadState(path string) (*State, error) {
@@ -48,6 +50,9 @@ func LoadState(path string) (*State, error) {
 
 	if state.LastModified == nil {
 		state.LastModified = make(map[string]time.Time)
+	}
+	if state.Checksum == nil {
+		state.Checksum = make(map[string]string)
 	}
 
 	return &state, nil

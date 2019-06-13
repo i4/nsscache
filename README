@@ -24,8 +24,8 @@ Nsscash is very careful when deploying the changes:
   message and a non-zero exit status. This prevents hiding possibly important
   errors. In addition all files are fetched first and then deployed to try to
   prevent inconsistent state if only one file can be downloaded. The state
-  file (containing last file modifications) is only updated when all
-  operations were successful.
+  file (containing last file modification and content hash) is only updated
+  when all operations were successful.
 - To prevent unexpected permissions, `nsscash` does not create new files. The
   user must create them first and `nsscash` will then re-use the permissions
   and owner/group when updating the file (see examples below).
@@ -127,9 +127,11 @@ typical configuration looks like this:
 
 The following global keys are available:
 
-- `statepath`: Path to a JSON file which stores the last modification time of
-  each file; automatically updated by `nsscash`. Used to fetch data only when
-  something has changed to reduce the required traffic.
+- `statepath`: Path to a JSON file which stores the last modification time and
+  hash of each file; automatically updated by `nsscash`. Used to fetch data
+  only when something has changed to reduce the required traffic, via
+  `If-Modified-Since`. When the hash of a file has changed the download is
+  forced.
 
 Each `file` block describes a single file to download/write. The following
 keys are available:
