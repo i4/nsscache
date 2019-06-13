@@ -22,15 +22,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"time"
 )
 
 type State struct {
 	LastModified map[string]time.Time
-
-	// Copy of LastModified to write the state file only on changes
-	origLastModified map[string]time.Time
 }
 
 func LoadState(path string) (*State, error) {
@@ -54,19 +50,13 @@ func LoadState(path string) (*State, error) {
 		state.LastModified = make(map[string]time.Time)
 	}
 
-	state.origLastModified = make(map[string]time.Time)
-	for k, v := range state.LastModified {
-		state.origLastModified[k] = v
-	}
-
 	return &state, nil
 }
 
-func WriteStateIfChanged(path string, state *State) error {
-	// State hasn't changed, nothing to do
-	if reflect.DeepEqual(state.LastModified, state.origLastModified) {
-		return nil
-	}
+func WriteState(path string, state *State) error {
+	// Update the state file even if nothing has changed to provide a
+	// simple way to check if nsscash ran successfully (the state is only
+	// updated if there were no errors)
 
 	x, err := json.Marshal(state)
 	if err != nil {

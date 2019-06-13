@@ -95,6 +95,10 @@ running processes!
 Now configure `nsscash` to run regularly, for example via cron or a systemd
 timer.
 
+To monitor `nsscash` for errors one can use the last modification time of the
+state file (see below). It's written on each successful run and not modified
+if an error occurs.
+
 === CONFIGURATION
 
 Nsscash is configured through a simple configuration file written in TOML. A

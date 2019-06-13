@@ -61,7 +61,9 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = WriteStateIfChanged(cfg.StatePath, state)
+		// NOTE: Make sure to call WriteState() only if there were no
+		// errors (see WriteState() and README)
+		err = WriteState(cfg.StatePath, state)
 		if err != nil {
 			log.Fatal(err)
 		}
