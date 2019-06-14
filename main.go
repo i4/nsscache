@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -129,21 +130,29 @@ func mainConvert(typ, srcPath, dstPath string) error {
 		return fmt.Errorf("unsupported file type %v", t)
 	}
 
-	// We must create the file first or deployFile() will abort
-	f, err := os.Create(dstPath)
+	dstDir := filepath.Dir(dstPath)
+	dstName := filepath.Base(dstPath)
+
+	// We must create the file first or deployFile() will abort; this is
+	// ugly because deployFile() already performs an atomic replacement
+	// but the simplest solution with the least duplicate code
+	f, err := ioutil.TempFile(dstDir, "tmp-"+dstName+"-")
 	if err != nil {
 		return err
 	}
+	tmpPath := f.Name()
+	defer os.Remove(tmpPath)
 	f.Close()
 
 	err = deployFile(&File{
 		Type: t,
 		Url:  srcPath,
-		Path: dstPath,
+		Path: tmpPath,
 		body: x.Bytes(),
 	})
 	if err != nil {
 		return err
 	}
-	return nil
+
+	return os.Rename(tmpPath, dstPath)
 }
