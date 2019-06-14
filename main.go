@@ -72,78 +72,78 @@ func main() {
 }
 
 func mainFetch(cfgPath string) error {
-		cfg, err := LoadConfig(cfgPath)
-		if err != nil {
-			return err
-		}
-		state, err := LoadState(cfg.StatePath)
-		if err != nil {
-			return err
-		}
-		err = handleFiles(cfg, state)
-		if err != nil {
-			return err
-		}
-		// NOTE: Make sure to call WriteState() only if there were no
-		// errors (see WriteState() and README)
-		err = WriteState(cfg.StatePath, state)
-		if err != nil {
-			return err
-		}
-		return nil
+	cfg, err := LoadConfig(cfgPath)
+	if err != nil {
+		return err
+	}
+	state, err := LoadState(cfg.StatePath)
+	if err != nil {
+		return err
+	}
+	err = handleFiles(cfg, state)
+	if err != nil {
+		return err
+	}
+	// NOTE: Make sure to call WriteState() only if there were no
+	// errors (see WriteState() and README)
+	err = WriteState(cfg.StatePath, state)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func mainConvert(typ, srcPath, dstPath string) error {
-		var t FileType
-		err := t.UnmarshalText([]byte(typ))
-		if err != nil {
-			return err
-		}
+	var t FileType
+	err := t.UnmarshalText([]byte(typ))
+	if err != nil {
+		return err
+	}
 
-		src, err := ioutil.ReadFile(srcPath)
+	src, err := ioutil.ReadFile(srcPath)
+	if err != nil {
+		return err
+	}
+	var x bytes.Buffer
+	if t == FileTypePlain {
+		x.Write(src)
+	} else if t == FileTypePasswd {
+		pws, err := ParsePasswds(bytes.NewReader(src))
 		if err != nil {
 			return err
 		}
-		var x bytes.Buffer
-		if t == FileTypePlain {
-			x.Write(src)
-		} else if t == FileTypePasswd {
-			pws, err := ParsePasswds(bytes.NewReader(src))
-			if err != nil {
-				return err
-			}
-			err = SerializePasswds(&x, pws)
-			if err != nil {
-				return err
-			}
-		} else if t == FileTypeGroup {
-			grs, err := ParseGroups(bytes.NewReader(src))
-			if err != nil {
-				return err
-			}
-			err = SerializeGroups(&x, grs)
-			if err != nil {
-				return err
-			}
-		} else {
-			return fmt.Errorf("unsupported file type %v", t)
+		err = SerializePasswds(&x, pws)
+		if err != nil {
+			return err
 		}
+	} else if t == FileTypeGroup {
+		grs, err := ParseGroups(bytes.NewReader(src))
+		if err != nil {
+			return err
+		}
+		err = SerializeGroups(&x, grs)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("unsupported file type %v", t)
+	}
 
-		// We must create the file first or deployFile() will abort
-		f, err := os.Create(dstPath)
-		if err != nil {
-			return err
-		}
-		f.Close()
+	// We must create the file first or deployFile() will abort
+	f, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	f.Close()
 
-		err = deployFile(&File{
-			Type: t,
-			Url:  srcPath,
-			Path: dstPath,
-			body: x.Bytes(),
-		})
-		if err != nil {
-			return err
-		}
-		return nil
+	err = deployFile(&File{
+		Type: t,
+		Url:  srcPath,
+		Path: dstPath,
+		body: x.Bytes(),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
