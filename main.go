@@ -49,7 +49,10 @@ func main() {
 			break
 		}
 
-		mainFetch(args[1])
+		err := mainFetch(args[1])
+		if err != nil {
+			log.Fatal(err)
+		}
 		return
 
 	case "convert":
@@ -57,7 +60,10 @@ func main() {
 			break
 		}
 
-		mainConvert(args[1], args[2], args[3])
+		err := mainConvert(args[1], args[2], args[3])
+		if err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -65,37 +71,38 @@ func main() {
 	os.Exit(1)
 }
 
-func mainFetch(cfgPath string) {
+func mainFetch(cfgPath string) error {
 		cfg, err := LoadConfig(cfgPath)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		state, err := LoadState(cfg.StatePath)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		err = handleFiles(cfg, state)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		// NOTE: Make sure to call WriteState() only if there were no
 		// errors (see WriteState() and README)
 		err = WriteState(cfg.StatePath, state)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
+		return nil
 }
 
-func mainConvert(typ, srcPath, dstPath string) {
+func mainConvert(typ, srcPath, dstPath string) error {
 		var t FileType
 		err := t.UnmarshalText([]byte(typ))
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		src, err := ioutil.ReadFile(srcPath)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		var x bytes.Buffer
 		if t == FileTypePlain {
@@ -103,29 +110,29 @@ func mainConvert(typ, srcPath, dstPath string) {
 		} else if t == FileTypePasswd {
 			pws, err := ParsePasswds(bytes.NewReader(src))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			err = SerializePasswds(&x, pws)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 		} else if t == FileTypeGroup {
 			grs, err := ParseGroups(bytes.NewReader(src))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			err = SerializeGroups(&x, grs)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 		} else {
-			log.Fatalf("unsupported file type %v", t)
+			return fmt.Errorf("unsupported file type %v", t)
 		}
 
 		// We must create the file first or deployFile() will abort
 		f, err := os.Create(dstPath)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		f.Close()
 
@@ -136,6 +143,7 @@ func mainConvert(typ, srcPath, dstPath string) {
 			body: x.Bytes(),
 		})
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
+		return nil
 }
