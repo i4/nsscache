@@ -49,7 +49,24 @@ func main() {
 			break
 		}
 
-		cfg, err := LoadConfig(args[1])
+		mainFetch(args[1])
+		return
+
+	case "convert":
+		if len(args) != 4 {
+			break
+		}
+
+		mainConvert(args[1], args[2], args[3])
+		return
+	}
+
+	flag.Usage()
+	os.Exit(1)
+}
+
+func mainFetch(cfgPath string) {
+		cfg, err := LoadConfig(cfgPath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -67,20 +84,16 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return
+}
 
-	case "convert":
-		if len(args) != 4 {
-			break
-		}
-
+func mainConvert(typ, srcPath, dstPath string) {
 		var t FileType
-		err := t.UnmarshalText([]byte(args[1]))
+		err := t.UnmarshalText([]byte(typ))
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		src, err := ioutil.ReadFile(args[2])
+		src, err := ioutil.ReadFile(srcPath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -110,7 +123,7 @@ func main() {
 		}
 
 		// We must create the file first or deployFile() will abort
-		f, err := os.Create(args[3])
+		f, err := os.Create(dstPath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -118,16 +131,11 @@ func main() {
 
 		err = deployFile(&File{
 			Type: t,
-			Url:  args[2],
-			Path: args[3],
+			Url:  srcPath,
+			Path: dstPath,
 			body: x.Bytes(),
 		})
 		if err != nil {
 			log.Fatal(err)
 		}
-		return
-	}
-
-	flag.Usage()
-	os.Exit(1)
 }
