@@ -171,15 +171,16 @@ func deployFile(file *File) error {
 	defer os.Remove(f.Name())
 	defer f.Close()
 
-	// Apply permissions/user/group from the target file, use Stat instead
-	// of Lstat as only the target's permissions are relevant
+	// Apply permissions/user/group from the target file but remove the
+	// write permissions to discourage manual modifications, use Stat
+	// instead of Lstat as only the target's permissions are relevant
 	stat, err := os.Stat(file.Path)
 	if err != nil {
 		// We do not create the path if it doesn't exist, because we
 		// do not know the proper permissions
 		return errors.Wrapf(err, "file.path %q must exist", file.Path)
 	}
-	err = f.Chmod(stat.Mode())
+	err = f.Chmod(stat.Mode() & ^os.FileMode(0222)) // remove write perms
 	if err != nil {
 		return err
 	}
