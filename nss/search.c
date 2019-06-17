@@ -35,18 +35,15 @@ static int bsearch_callback(const void *x, const void *y) {
         return strcmp(key->name, name);
 
     // Lookup by ID (uint64_t)
-    } else if (key->id != NULL) {
+    } else {
         const uint64_t *id = member;
-        if (*key->id < *id) {
+        if (key->id < *id) {
             return -1;
-        } else if (*key->id == *id) {
+        } else if (key->id == *id) {
             return 0;
         } else {
             return +1;
         }
-
-    } else {
-        abort();
     }
 }
 

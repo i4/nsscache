@@ -180,9 +180,8 @@ static enum nss_status internal_getgr(struct search_key *key, struct group *resu
 }
 
 enum nss_status _nss_cash_getgrgid_r(gid_t gid, struct group *result, char *buffer, size_t buflen, int *errnop) {
-    uint64_t id = (uint64_t)gid;
     struct search_key key = {
-        .id = &id,
+        .id = (uint64_t)gid,
         .offset = offsetof(struct group_entry, gid),
     };
     return internal_getgr(&key, result, buffer, buflen, errnop);

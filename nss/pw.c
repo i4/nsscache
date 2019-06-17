@@ -163,9 +163,8 @@ static enum nss_status internal_getpw(struct search_key *key, struct passwd *res
 }
 
 enum nss_status _nss_cash_getpwuid_r(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop) {
-    uint64_t id = (uint64_t)uid;
     struct search_key key = {
-        .id = &id,
+        .id = (uint64_t)uid,
         .offset = offsetof(struct passwd_entry, uid),
     };
     return internal_getpw(&key, result, buffer, buflen, errnop);
