@@ -74,24 +74,23 @@ static struct file static_file = {
 };
 static pthread_mutex_t static_file_lock = PTHREAD_MUTEX_INITIALIZER;
 
+static void internal_unmap_static_file(void) {
+    pthread_mutex_lock(&static_file_lock);
+    unmap_file(&static_file);
+    pthread_mutex_unlock(&static_file_lock);
+}
+
 enum nss_status _nss_cash_setpwent(int x) {
     (void)x;
 
-    pthread_mutex_lock(&static_file_lock);
     // Unmap is necessary to detect changes when the file was replaced on
-    // disk
-    unmap_file(&static_file);
-    // getpwent_r will open the file if necessary when called
-    pthread_mutex_unlock(&static_file_lock);
-
+    // disk; getpwent_r will open the file if necessary when called
+    internal_unmap_static_file();
     return NSS_STATUS_SUCCESS;
 }
 
 enum nss_status _nss_cash_endpwent(void) {
-    pthread_mutex_lock(&static_file_lock);
-    unmap_file(&static_file);
-    pthread_mutex_unlock(&static_file_lock);
-
+    internal_unmap_static_file();
     return NSS_STATUS_SUCCESS;
 }
 
