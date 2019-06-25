@@ -28,8 +28,8 @@ Nsscash is very careful when deploying the changes:
   when all operations were successful.
 - To prevent unexpected permissions, `nsscash` does not create new files. The
   user must create them first and `nsscash` will then re-use the permissions
-  (without the write bits) and owner/group when updating the file (see
-  examples below).
+  (without the write bits to discourage manual modifications) and owner/group
+  when updating the file (see examples below).
 - To prevent misconfigurations, empty files (no users/groups) are not
   permitted and will not be written to disk. This is designed to prevent the
   accidental loss of all users/groups on a system.
