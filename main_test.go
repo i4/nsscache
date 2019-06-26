@@ -191,6 +191,9 @@ func TestMainFetch(t *testing.T) {
 		fetchPasswdInvalid,
 		fetchPasswdLimits,
 		fetchPasswd,
+		// Tests for plain
+		fetchPlainEmpty,
+		fetchPlain,
 		// Special tests
 		fetchNoConfig,
 	}
@@ -437,6 +440,63 @@ func fetchPasswd(a args) {
 	mustNotExist(t, plainPath, groupPath)
 	mustBeNew(t, passwdPath, statePath)
 	mustHaveHash(t, passwdPath, "bbb7db67469b111200400e2470346d5515d64c23")
+}
+
+func fetchPlainEmpty(a args) {
+	t := a.t
+	mustWriteConfig(t, fmt.Sprintf(`
+statepath = "%[1]s"
+
+[[file]]
+type = "plain"
+url = "%[2]s/plain"
+path = "%[3]s"
+`, statePath, a.url, plainPath))
+	mustCreate(t, plainPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		// Empty response
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"refusing to use empty response")
+
+	mustNotExist(t, statePath, passwdPath, groupPath)
+	mustBeOld(t, plainPath)
+}
+
+func fetchPlain(a args) {
+	t := a.t
+	mustWriteConfig(t, fmt.Sprintf(`
+statepath = "%[1]s"
+
+[[file]]
+type = "plain"
+url = "%[2]s/plain"
+path = "%[3]s"
+`, statePath, a.url, plainPath))
+	mustCreate(t, plainPath)
+	mustHaveHash(t, plainPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/plain" {
+			return
+		}
+
+		fmt.Fprintln(w, "some file")
+	}
+
+	err := mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, passwdPath, groupPath)
+	mustBeNew(t, plainPath, statePath)
+	mustHaveHash(t, plainPath, "0e08b5e8c10abc3e455b75286ba4a1fbd56e18a5")
+
+	// Remaining functionality already tested in fetchPasswd()
 }
 
 func fetchNoConfig(a args) {
