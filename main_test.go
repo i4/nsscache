@@ -184,6 +184,13 @@ func TestMainFetch(t *testing.T) {
 	defer log.SetOutput(os.Stderr)
 
 	tests := []func(args){
+		// Perform most tests with passwd for simplicity
+		fetchPasswdCacheFileDoesNotExist,
+		fetchPasswd404,
+		fetchPasswdEmpty,
+		fetchPasswdInvalid,
+		fetchPasswdLimits,
+		fetchPasswd,
 		// Special tests
 		fetchNoConfig,
 	}
@@ -229,6 +236,207 @@ func TestMainFetch(t *testing.T) {
 			})
 		})
 	}
+}
+
+func fetchPasswdCacheFileDoesNotExist(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"file.path \""+passwdPath+"\" must exist")
+
+	mustNotExist(t, statePath, passwdPath, plainPath, groupPath)
+}
+
+func fetchPasswd404(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+	mustCreate(t, passwdPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		// 404
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"status code 404")
+
+	mustNotExist(t, statePath, plainPath, groupPath)
+	mustBeOld(a.t, passwdPath)
+}
+
+func fetchPasswdEmpty(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+	mustCreate(t, passwdPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		// Empty response
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"refusing to use empty passwd file")
+
+	mustNotExist(t, statePath, plainPath, groupPath)
+	mustBeOld(t, passwdPath)
+}
+
+func fetchPasswdInvalid(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+	mustCreate(t, passwdPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/passwd" {
+			return
+		}
+
+		fmt.Fprintln(w, "root:x:invalid:0:root:/root:/bin/bash")
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"invalid uid in line")
+
+	mustNotExist(t, statePath, plainPath, groupPath)
+	mustBeOld(t, passwdPath)
+}
+
+func fetchPasswdLimits(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+	mustCreate(t, passwdPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/passwd" {
+			return
+		}
+
+		fmt.Fprint(w, "root:x:0:0:root:/root:/bin/bash")
+		for i := 0; i < 65536; i++ {
+			fmt.Fprint(w, "x")
+		}
+		fmt.Fprint(w, "\n")
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"passwd too large to serialize")
+
+	mustNotExist(t, statePath, plainPath, groupPath)
+	mustBeOld(t, passwdPath)
+}
+
+func fetchPasswd(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+	mustCreate(t, passwdPath)
+	mustHaveHash(t, passwdPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+
+	t.Log("First fetch, write files")
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/passwd" {
+			return
+		}
+
+		// No "Last-Modified" header
+		fmt.Fprintln(w, "root:x:0:0:root:/root:/bin/bash")
+		fmt.Fprintln(w, "daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin")
+	}
+
+	err := mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, plainPath, groupPath)
+	mustBeNew(t, passwdPath, statePath)
+	// The actual content of passwdPath is verified by the NSS tests
+	mustHaveHash(t, passwdPath, "bbb7db67469b111200400e2470346d5515d64c23")
+
+	t.Log("Fetch again, no support for Last-Modified")
+
+	mustMakeOld(t, passwdPath, statePath)
+
+	err = mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, plainPath, groupPath)
+	mustBeNew(t, passwdPath, statePath)
+	mustHaveHash(t, passwdPath, "bbb7db67469b111200400e2470346d5515d64c23")
+
+	t.Log("Fetch again, support for Last-Modified, but not retrieved yet")
+
+	mustMakeOld(t, passwdPath, statePath)
+
+	lastChange := time.Now()
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/passwd" {
+			return
+		}
+
+		modified := r.Header.Get("If-Modified-Since")
+		if modified != "" {
+			x, err := http.ParseTime(modified)
+			if err != nil {
+				t.Fatalf("invalid If-Modified-Since %v",
+					modified)
+			}
+			if !x.Before(lastChange) {
+				w.WriteHeader(http.StatusNotModified)
+				return
+			}
+		}
+
+		w.Header().Add("Last-Modified",
+			lastChange.Format(http.TimeFormat))
+		fmt.Fprintln(w, "root:x:0:0:root:/root:/bin/bash")
+		fmt.Fprintln(w, "daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin")
+	}
+
+	err = mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, plainPath, groupPath)
+	mustBeNew(t, passwdPath, statePath)
+	mustHaveHash(t, passwdPath, "bbb7db67469b111200400e2470346d5515d64c23")
+
+	t.Log("Fetch again, support for Last-Modified")
+
+	mustMakeOld(t, passwdPath, statePath)
+
+	err = mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, plainPath, groupPath)
+	mustBeOld(t, passwdPath)
+	mustBeNew(t, statePath)
+	mustHaveHash(t, passwdPath, "bbb7db67469b111200400e2470346d5515d64c23")
+
+	t.Log("Corrupt local passwd cache, fetched again")
+
+	os.Chmod(passwdPath, 0644) // make writable again
+	mustCreate(t, passwdPath)
+	mustMakeOld(t, passwdPath, statePath)
+
+	err = mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, plainPath, groupPath)
+	mustBeNew(t, passwdPath, statePath)
+	mustHaveHash(t, passwdPath, "bbb7db67469b111200400e2470346d5515d64c23")
 }
 
 func fetchNoConfig(a args) {
