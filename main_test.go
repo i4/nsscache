@@ -200,6 +200,11 @@ func TestMainFetch(t *testing.T) {
 		fetchGroup,
 		// Special tests
 		fetchNoConfig,
+		fetchStateCannotRead,
+		fetchStateInvalid,
+		fetchStateCannotWrite,
+		fetchCannotDeploy,
+		fetchSecondFetchFails,
 	}
 
 	cleanup := []string{
@@ -602,4 +607,128 @@ func fetchNoConfig(a args) {
 		configPath+": no such file or directory")
 
 	mustNotExist(t, configPath, statePath, passwdPath, plainPath, groupPath)
+}
+
+func fetchStateCannotRead(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+
+	mustCreate(t, statePath)
+	err := os.Chmod(statePath, 0000)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		statePath+": permission denied")
+
+	mustNotExist(t, passwdPath, plainPath, groupPath)
+}
+
+func fetchStateInvalid(a args) {
+	t := a.t
+	mustWriteGroupConfig(t, a.url)
+	mustCreate(t, statePath)
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"unexpected end of JSON input")
+
+	mustNotExist(t, groupPath, passwdPath, plainPath)
+	mustBeOld(t, statePath)
+}
+
+func fetchStateCannotWrite(a args) {
+	t := a.t
+	mustWriteGroupConfig(t, a.url)
+	mustCreate(t, groupPath)
+	mustHaveHash(t, groupPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		// To prevent mainFetch() from trying to update groupPath
+		// which will also fail
+		w.WriteHeader(http.StatusNotModified)
+	}
+
+	err := os.Chmod("testdata", 0500)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod("testdata", 0755)
+
+	err = mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"permission denied")
+
+	mustNotExist(t, statePath, passwdPath, plainPath)
+	mustBeOld(t, groupPath)
+}
+
+func fetchCannotDeploy(a args) {
+	t := a.t
+	mustWriteGroupConfig(t, a.url)
+	mustCreate(t, groupPath)
+	mustHaveHash(t, groupPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/group" {
+			return
+		}
+
+		fmt.Fprintln(w, "root:x:0:")
+		fmt.Fprintln(w, "daemon:x:1:andariel,duriel,mephisto,diablo,baal")
+	}
+
+	err := os.Chmod("testdata", 0500)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod("testdata", 0755)
+
+	err = mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"permission denied")
+
+	mustNotExist(t, statePath, passwdPath, plainPath)
+	mustBeOld(t, groupPath)
+}
+
+func fetchSecondFetchFails(a args) {
+	t := a.t
+	mustWriteConfig(t, fmt.Sprintf(`
+statepath = "%[1]s"
+
+[[file]]
+type = "passwd"
+url = "%[2]s/passwd"
+path = "%[3]s"
+
+[[file]]
+type = "group"
+url = "%[2]s/group"
+path = "%[4]s"
+`, statePath, a.url, passwdPath, groupPath))
+	mustCreate(t, passwdPath)
+	mustCreate(t, groupPath)
+	mustHaveHash(t, passwdPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+	mustHaveHash(t, groupPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/passwd" {
+			fmt.Fprintln(w, "root:x:0:0:root:/root:/bin/bash")
+		}
+		if r.URL.Path == "/group" {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"status code 404")
+
+	mustNotExist(t, statePath, plainPath)
+	// Even tough passwd was successfully fetched, no files were modified
+	// because the second fetch failed
+	mustBeOld(t, passwdPath, groupPath)
 }
