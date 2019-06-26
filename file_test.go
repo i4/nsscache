@@ -27,6 +27,7 @@ func TestDeployFile(t *testing.T) {
 
 	// Suppress log messages
 	log.SetOutput(ioutil.Discard)
+	defer log.SetOutput(os.Stderr)
 
 	// Setup & cleanup
 	f, err := os.Create(deploy)
