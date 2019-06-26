@@ -191,9 +191,13 @@ func TestMainFetch(t *testing.T) {
 		fetchPasswdInvalid,
 		fetchPasswdLimits,
 		fetchPasswd,
-		// Tests for plain
+		// Tests for plain and group
 		fetchPlainEmpty,
 		fetchPlain,
+		fetchGroupEmpty,
+		fetchGroupInvalid,
+		fetchGroupLimits,
+		fetchGroup,
 		// Special tests
 		fetchNoConfig,
 	}
@@ -495,6 +499,97 @@ path = "%[3]s"
 	mustNotExist(t, passwdPath, groupPath)
 	mustBeNew(t, plainPath, statePath)
 	mustHaveHash(t, plainPath, "0e08b5e8c10abc3e455b75286ba4a1fbd56e18a5")
+
+	// Remaining functionality already tested in fetchPasswd()
+}
+
+func fetchGroupEmpty(a args) {
+	t := a.t
+	mustWriteGroupConfig(t, a.url)
+	mustCreate(t, groupPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		// Empty response
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"refusing to use empty group file")
+
+	mustNotExist(t, statePath, passwdPath, plainPath)
+	mustBeOld(t, groupPath)
+}
+
+func fetchGroupInvalid(a args) {
+	t := a.t
+	mustWriteGroupConfig(t, a.url)
+	mustCreate(t, groupPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/group" {
+			return
+		}
+
+		fmt.Fprintln(w, "root:x::")
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"invalid gid in line")
+
+	mustNotExist(t, statePath, passwdPath, plainPath)
+	mustBeOld(t, groupPath)
+}
+
+func fetchGroupLimits(a args) {
+	t := a.t
+	mustWriteGroupConfig(t, a.url)
+	mustCreate(t, groupPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/group" {
+			return
+		}
+
+		fmt.Fprint(w, "root:x:0:")
+		for i := 0; i < 65536; i++ {
+			fmt.Fprint(w, "x")
+		}
+		fmt.Fprint(w, "\n")
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"group too large to serialize")
+
+	mustNotExist(t, statePath, passwdPath, plainPath)
+	mustBeOld(t, groupPath)
+}
+
+func fetchGroup(a args) {
+	t := a.t
+	mustWriteGroupConfig(t, a.url)
+	mustCreate(t, groupPath)
+	mustHaveHash(t, groupPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/group" {
+			return
+		}
+
+		fmt.Fprintln(w, "root:x:0:")
+		fmt.Fprintln(w, "daemon:x:1:andariel,duriel,mephisto,diablo,baal")
+	}
+
+	err := mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, passwdPath, plainPath)
+	mustBeNew(t, groupPath, statePath)
+	// The actual content of groupPath is verified by the NSS tests
+	mustHaveHash(t, groupPath, "8c27a8403278ba2e392b86d98d4dff1fdefcafdd")
 
 	// Remaining functionality already tested in fetchPasswd()
 }
