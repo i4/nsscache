@@ -56,8 +56,8 @@ nsscash is licensed under AGPL version 3 or later.
 - C compiler, for `libnss_cash.so.2`
 
 Tested on Debian Stretch and Buster, but should work on any GNU/Linux system.
-With adapations to the NSS module it should work on any UNIX-like system which
-uses NSS.
+With adaptations to the NSS module it should work on any UNIX-like system
+which uses NSS.
 
 
 == USAGE
