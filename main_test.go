@@ -728,7 +728,7 @@ path = "%[4]s"
 		"status code 404")
 
 	mustNotExist(t, statePath, plainPath)
-	// Even tough passwd was successfully fetched, no files were modified
+	// Even though passwd was successfully fetched, no files were modified
 	// because the second fetch failed
 	mustBeOld(t, passwdPath, groupPath)
 }
