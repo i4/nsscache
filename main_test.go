@@ -207,6 +207,12 @@ func TestMainFetch(t *testing.T) {
 		fetchSecondFetchFails,
 	}
 
+	for _, f := range tests {
+		runMainTest(t, f)
+	}
+}
+
+func runMainTest(t *testing.T, f func(args)) {
 	cleanup := []string{
 		configPath,
 		statePath,
@@ -215,7 +221,6 @@ func TestMainFetch(t *testing.T) {
 		groupPath,
 	}
 
-	for _, f := range tests {
 		// NOTE: This is not guaranteed to work according to reflect's
 		// documentation but seems to work reliable for normal
 		// functions.
@@ -248,7 +253,6 @@ func TestMainFetch(t *testing.T) {
 				handler: &handler,
 			})
 		})
-	}
 }
 
 func fetchPasswdCacheFileDoesNotExist(a args) {
