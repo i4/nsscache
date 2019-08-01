@@ -236,9 +236,10 @@ func TestMainFetch(t *testing.T) {
 			}
 
 			var handler func(http.ResponseWriter, *http.Request)
-			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler(w, r)
-			}))
+			ts := httptest.NewServer(http.HandlerFunc(
+				func(w http.ResponseWriter, r *http.Request) {
+					handler(w, r)
+				}))
 			defer ts.Close()
 
 			f(args{
