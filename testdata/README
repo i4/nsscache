@@ -1,0 +1,12 @@
+= README
+
+To re-generate the test CA and test certificates run the following commands:
+
+    certtool --generate-privkey > ca.key
+    certtool --generate-self-signed --load-privkey ca.key --template ca.cfg > ca.crt
+
+    certtool --generate-privkey > server.key
+    certtool --generate-certificate --load-privkey server.key --load-ca-certificate ca.crt --load-ca-privkey ca.key --template server.cfg > server.crt
+
+    certtool --generate-privkey > ca2.key
+    certtool --generate-self-signed --load-privkey ca2.key --template ca.cfg > ca2.crt

@@ -18,19 +18,25 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // Global variable to permit reuse of connections (keep-alive)
-var client *http.Client
+var clients map[string]*http.Client
 
 func init() {
-	client = &http.Client{}
+	clients = make(map[string]*http.Client)
+	clients[""] = &http.Client{}
 }
 
-func fetchIfModified(url string, lastModified *time.Time) (int, []byte, error) {
+func fetchIfModified(url, ca string, lastModified *time.Time) (int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return 0, nil, err
@@ -38,6 +44,29 @@ func fetchIfModified(url string, lastModified *time.Time) (int, []byte, error) {
 	if !lastModified.IsZero() {
 		req.Header.Add("If-Modified-Since",
 			lastModified.Format(http.TimeFormat))
+	}
+
+	client, ok := clients[ca]
+	if !ok {
+		pem, err := ioutil.ReadFile(ca)
+		if err != nil {
+			return 0, nil, errors.Wrapf(err, "file.ca %q", ca)
+		}
+		pool := x509.NewCertPool()
+		ok := pool.AppendCertsFromPEM(pem)
+		if !ok {
+			return 0, nil, fmt.Errorf(
+				"file.ca %q: no PEM cert found", ca)
+		}
+
+		client = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: pool,
+				},
+			},
+		}
+		clients[ca] = client
 	}
 
 	resp, err := client.Do(req)

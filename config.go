@@ -32,6 +32,7 @@ type File struct {
 	Type FileType
 	Url  string
 	Path string
+	CA   string
 
 	body []byte // internally used by handleFiles()
 }

@@ -147,6 +147,10 @@ keys are available:
 
 - `url`: URL to fetch the file from; HTTP and HTTPS are supported
 
+- `ca`: Path to a custom CA in PEM format. Restricts HTTPS requests to accept
+  only certificates signed by this CA. Defaults to the system's certificate
+  store when omitted.
+
 - `path`: Path to store the retrieved file
 
 
