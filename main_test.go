@@ -221,38 +221,37 @@ func runMainTest(t *testing.T, f func(args)) {
 		groupPath,
 	}
 
-		// NOTE: This is not guaranteed to work according to reflect's
-		// documentation but seems to work reliable for normal
-		// functions.
-		fn := runtime.FuncForPC(reflect.ValueOf(f).Pointer())
-		name := fn.Name()
-		name = name[strings.LastIndex(name, ".")+1:]
+	// NOTE: This is not guaranteed to work according to reflect's
+	// documentation but seems to work reliable for normal functions.
+	fn := runtime.FuncForPC(reflect.ValueOf(f).Pointer())
+	name := fn.Name()
+	name = name[strings.LastIndex(name, ".")+1:]
 
-		t.Run(name, func(t *testing.T) {
-			// Preparation & cleanup
-			for _, p := range cleanup {
-				err := os.Remove(p)
-				if err != nil && !os.IsNotExist(err) {
-					t.Fatal(err)
-				}
-				// Remove the file at the end of this test
-				// run, if it was created
-				defer os.Remove(p)
+	t.Run(name, func(t *testing.T) {
+		// Preparation & cleanup
+		for _, p := range cleanup {
+			err := os.Remove(p)
+			if err != nil && !os.IsNotExist(err) {
+				t.Fatal(err)
 			}
+			// Remove the file at the end of this test run, if it
+			// was created
+			defer os.Remove(p)
+		}
 
-			var handler func(http.ResponseWriter, *http.Request)
-			ts := httptest.NewServer(http.HandlerFunc(
-				func(w http.ResponseWriter, r *http.Request) {
-					handler(w, r)
-				}))
-			defer ts.Close()
+		var handler func(http.ResponseWriter, *http.Request)
+		ts := httptest.NewServer(http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				handler(w, r)
+			}))
+		defer ts.Close()
 
-			f(args{
-				t:       t,
-				url:     ts.URL,
-				handler: &handler,
-			})
+		f(args{
+			t:       t,
+			url:     ts.URL,
+			handler: &handler,
 		})
+	})
 }
 
 func fetchPasswdCacheFileDoesNotExist(a args) {
