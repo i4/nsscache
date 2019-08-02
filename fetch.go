@@ -43,7 +43,7 @@ func fetchIfModified(url, ca string, lastModified *time.Time) (int, []byte, erro
 	}
 	if !lastModified.IsZero() {
 		req.Header.Add("If-Modified-Since",
-			lastModified.Format(http.TimeFormat))
+			lastModified.UTC().Format(http.TimeFormat))
 	}
 
 	client, ok := clients[ca]
