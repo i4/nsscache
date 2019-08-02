@@ -438,14 +438,14 @@ func fetchPasswd(a args) {
 				t.Fatalf("invalid If-Modified-Since %v",
 					modified)
 			}
-			if !x.Before(lastChange) {
+			if !x.Before(lastChange.Truncate(time.Second)) {
 				w.WriteHeader(http.StatusNotModified)
 				return
 			}
 		}
 
 		w.Header().Add("Last-Modified",
-			lastChange.Format(http.TimeFormat))
+			lastChange.UTC().Format(http.TimeFormat))
 		fmt.Fprintln(w, "root:x:0:0:root:/root:/bin/bash")
 		fmt.Fprintln(w, "daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin")
 	}
