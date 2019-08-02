@@ -33,11 +33,11 @@ import (
 )
 
 const (
-	configPath = "testdata/config.toml"
-	statePath  = "testdata/state.json"
-	passwdPath = "testdata/passwd.nsscash"
-	plainPath  = "testdata/plain"
-	groupPath  = "testdata/group.nsscash"
+	configPath  = "testdata/config.toml"
+	statePath   = "testdata/state.json"
+	passwdPath  = "testdata/passwd.nsscash"
+	plainPath   = "testdata/plain"
+	groupPath   = "testdata/group.nsscash"
 	tlsCAPath   = "testdata/ca.crt"
 	tlsCertPath = "testdata/server.crt"
 	tlsKeyPath  = "testdata/server.key"
