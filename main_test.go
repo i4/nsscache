@@ -426,6 +426,7 @@ func fetchPasswd(a args) {
 	mustMakeOld(t, passwdPath, statePath)
 
 	lastChange := time.Now()
+	change := false
 	*a.handler = func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/passwd" {
 			return
@@ -448,6 +449,9 @@ func fetchPasswd(a args) {
 			lastChange.UTC().Format(http.TimeFormat))
 		fmt.Fprintln(w, "root:x:0:0:root:/root:/bin/bash")
 		fmt.Fprintln(w, "daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin")
+		if change {
+			fmt.Fprintln(w, "bin:x:2:2:bin:/bin:/usr/sbin/nologin")
+		}
 	}
 
 	err = mainFetch(configPath)
@@ -487,6 +491,22 @@ func fetchPasswd(a args) {
 	mustNotExist(t, plainPath, groupPath)
 	mustBeNew(t, passwdPath, statePath)
 	mustHaveHash(t, passwdPath, "bbb7db67469b111200400e2470346d5515d64c23")
+
+	t.Log("Fetch again with newer server response")
+
+	change = true
+	lastChange = time.Now().Add(time.Second)
+
+	mustMakeOld(t, passwdPath, statePath)
+
+	err = mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, plainPath, groupPath)
+	mustBeNew(t, passwdPath, statePath)
+	mustHaveHash(t, passwdPath, "ca9c7477cb425667fc9ecbd79e8e1c2ad0e84423")
 }
 
 func fetchPlainEmpty(a args) {
