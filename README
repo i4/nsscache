@@ -19,7 +19,8 @@ lookups. To support quick lookups, in O(log n), the files utilize indices.
 
 Nsscash is very careful when deploying the changes:
 - All files are updated using the standard "write to temporary file", "sync",
-  "rename" steps which is atomic on UNIX file systems.
+  "rename" steps which is atomic on UNIX file systems. The indices are stored
+  in the same file preventing stale data during the update.
 - All errors cause an immediate abort ("fail fast") with a proper error
   message and a non-zero exit status. This prevents hiding possibly important
   errors. In addition all files are fetched first and then deployed to try to
