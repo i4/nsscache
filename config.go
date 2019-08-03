@@ -30,10 +30,10 @@ type Config struct {
 }
 
 type File struct {
-	Type FileType
-	Url  string
-	Path string
-	CA   string
+	Type     FileType
+	Url      string
+	Path     string
+	CA       string
 	Username string
 	Password string
 
