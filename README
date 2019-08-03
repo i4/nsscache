@@ -152,6 +152,10 @@ keys are available:
   only certificates signed by this CA. Defaults to the system's certificate
   store when omitted.
 
+- `username`/`password`: Username and password sent via HTTP Basic-Auth to the
+  webserver. The configuration file must not be readable by other users when
+  this is used.
+
 - `path`: Path to store the retrieved file
 
 

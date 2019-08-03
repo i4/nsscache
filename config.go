@@ -19,6 +19,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/BurntSushi/toml"
 )
@@ -33,6 +34,8 @@ type File struct {
 	Url  string
 	Path string
 	CA   string
+	Username string
+	Password string
 
 	body []byte // internally used by handleFiles()
 }
@@ -72,6 +75,13 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("invalid fields used: %q", undecoded)
 	}
 
+	f, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	perms := f.Mode().Perm()
+	unsafe := (perms & 0077) != 0 // readable by others
+
 	if cfg.StatePath == "" {
 		return nil, fmt.Errorf("statepath must not be empty")
 	}
@@ -84,6 +94,12 @@ func LoadConfig(path string) (*Config, error) {
 		if f.Path == "" {
 			return nil, fmt.Errorf(
 				"file[%d].path must not be empty", i)
+		}
+		if (f.Username != "" || f.Password != "") && unsafe {
+			return nil, fmt.Errorf(
+				"file[%d].username/passsword in use and "+
+					"unsafe permissions %v on %q",
+				i, perms, path)
 		}
 	}
 

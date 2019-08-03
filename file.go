@@ -89,7 +89,8 @@ func fetchFile(file *File, state *State) error {
 		t = zero // force download
 	}
 
-	status, body, err := fetchIfModified(file.Url, file.CA, &t)
+	status, body, err := fetchIfModified(file.Url,
+		file.Username, file.Password, file.CA, &t)
 	if err != nil {
 		return err
 	}

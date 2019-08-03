@@ -36,10 +36,13 @@ func init() {
 	clients[""] = &http.Client{}
 }
 
-func fetchIfModified(url, ca string, lastModified *time.Time) (int, []byte, error) {
+func fetchIfModified(url, user, pass, ca string, lastModified *time.Time) (int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return 0, nil, err
+	}
+	if user != "" || pass != "" {
+		req.SetBasicAuth(user, pass)
 	}
 	if !lastModified.IsZero() {
 		req.Header.Add("If-Modified-Since",

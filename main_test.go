@@ -66,6 +66,12 @@ func mustNotExist(t *testing.T, paths ...string) {
 	}
 }
 
+func hashAsHex(x []byte) string {
+	h := sha1.New()
+	h.Write(x)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 // mustHaveHash checks if the given path content has the given SHA-1 string
 // (in hex).
 func mustHaveHash(t *testing.T, path string, hash string) {
@@ -74,10 +80,7 @@ func mustHaveHash(t *testing.T, path string, hash string) {
 		t.Fatal(err)
 	}
 
-	h := sha1.New()
-	h.Write(x)
-	y := hex.EncodeToString(h.Sum(nil))
-
+	y := hashAsHex(x)
 	if y != hash {
 		t.Errorf("%q has unexpected hash %q", path, y)
 	}
@@ -212,6 +215,7 @@ func TestMainFetch(t *testing.T) {
 		fetchStateCannotWrite,
 		fetchCannotDeploy,
 		fetchSecondFetchFails,
+		fetchBasicAuth,
 	}
 
 	// HTTP tests
@@ -793,6 +797,87 @@ ca = "%[5]s"
 	// Even though passwd was successfully fetched, no files were modified
 	// because the second fetch failed
 	mustBeOld(t, passwdPath, groupPath)
+}
+
+func fetchBasicAuth(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+	mustCreate(t, passwdPath)
+	mustHaveHash(t, passwdPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+
+	validUser := "username"
+	validPass := "password"
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/passwd" {
+			return
+		}
+
+		user, pass, ok := r.BasicAuth()
+		// NOTE: Do not use this in production because it permits
+		// attackers to determine the length of user/pass. Instead use
+		// hashes and subtle.ConstantTimeCompare().
+		if !ok || user != validUser || pass != validPass {
+			w.Header().Set("WWW-Authenticate", `Basic realm="Test"`)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		fmt.Fprintln(w, "root:x:0:0:root:/root:/bin/bash")
+		fmt.Fprintln(w, "daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin")
+	}
+
+	t.Log("Missing authentication")
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"status code 401")
+
+	mustNotExist(t, statePath, groupPath, plainPath)
+	mustBeOld(t, passwdPath)
+
+	t.Log("Unsafe config permissions")
+
+	mustWriteConfig(t, fmt.Sprintf(`
+statepath = "%[1]s"
+
+[[file]]
+type = "passwd"
+url = "%[2]s/passwd"
+path = "%[3]s"
+ca = "%[4]s"
+username = "%[5]s"
+password = "%[6]s"
+`, statePath, a.url, passwdPath, tlsCAPath, validUser, validPass))
+
+	err = os.Chmod(configPath, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"file[0].username/passsword in use and unsafe permissions "+
+			"-rw-r--r-- on \"testdata/config.toml\"")
+
+	mustNotExist(t, statePath, groupPath, plainPath)
+	mustBeOld(t, passwdPath)
+
+	t.Log("Working authentication")
+
+	err = os.Chmod(configPath, 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = mainFetch(configPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mustNotExist(t, plainPath, groupPath)
+	mustBeNew(t, passwdPath, statePath)
+	mustHaveHash(t, passwdPath, "bbb7db67469b111200400e2470346d5515d64c23")
 }
 
 func fetchInvalidCA(a args) {
