@@ -44,6 +44,9 @@ The passwd/group files have the following size restrictions:
 - `nsscash` checks for these restrictions and aborts with an error if they are
   violated
 
+nsscash has an extensive test suite for both the Go and C part testing general
+requirements and various corner cases.
+
 nsscash is licensed under AGPL version 3 or later.
 
 [1] https://github.com/google/nsscache
@@ -55,6 +58,8 @@ nsscash is licensed under AGPL version 3 or later.
   - github.com/pkg/errors
   - github.com/BurntSushi/toml
 - C compiler, for `libnss_cash.so.2`
+
+- HTTP(S) server to provide the passwd/group/etc. files
 
 Tested on Debian Buster, but should work on any GNU/Linux system. With
 adaptations to the NSS module it should work on any UNIX-like system which
@@ -143,18 +148,18 @@ keys are available:
   `plain` (arbitrary format). Only `passwd` and `group` files are supported by
   the nsscash NSS module. But, as explained above, `plain` can be used to
   distribute arbitrary files. The type is required as the `.nsscash` files are
-  pre processed for faster lookups and simpler code which requires a known
+  pre processed for faster lookups and simpler C code which requires a known
   format.
 
 - `url`: URL to fetch the file from; HTTP and HTTPS are supported
 
 - `ca`: Path to a custom CA in PEM format. Restricts HTTPS requests to accept
   only certificates signed by this CA. Defaults to the system's certificate
-  store when omitted.
+  store when omitted. (optional)
 
 - `username`/`password`: Username and password sent via HTTP Basic-Auth to the
   webserver. The configuration file must not be readable by other users when
-  this is used.
+  this is used. (optional)
 
 - `path`: Path to store the retrieved file
 
