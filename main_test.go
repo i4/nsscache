@@ -216,6 +216,7 @@ func TestMainFetch(t *testing.T) {
 		fetchCannotDeploy,
 		fetchSecondFetchFails,
 		fetchBasicAuth,
+		// TODO: fetchCannotDeployMultiple,
 	}
 
 	// HTTP tests
@@ -966,3 +967,52 @@ ca = "%[4]s"
 	mustNotExist(t, statePath, plainPath, groupPath)
 	mustBeOld(t, passwdPath)
 }
+
+/*
+TODO: implement code for this test
+
+func fetchCannotDeployMultiple(a args) {
+	t := a.t
+	newPlainDir := "testdata/x"
+	newPlainPath := newPlainDir + "/plain"
+	mustWriteConfig(t, fmt.Sprintf(`
+statepath = "%[1]s"
+
+[[file]]
+type = "group"
+url = "%[2]s/group"
+path = "%[3]s"
+
+[[file]]
+type = "plain"
+url = "%[2]s/plain"
+path = "%[4]s"
+`, statePath, a.url, groupPath, newPlainPath))
+	os.Mkdir(newPlainDir, 0755)
+	defer os.RemoveAll(newPlainDir)
+	mustCreate(t, groupPath)
+	mustCreate(t, newPlainPath)
+	mustHaveHash(t, groupPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/group" {
+			fmt.Fprintln(w, "root:x:0:")
+		}
+		if r.URL.Path == "/plain" {
+			fmt.Fprintln(w, "some file")
+		}
+	}
+
+	err := os.Chmod(newPlainDir, 0500)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"permission denied")
+
+	mustNotExist(t, statePath, passwdPath, plainPath)
+	mustBeOld(t, groupPath, newPlainPath)
+}
+*/
