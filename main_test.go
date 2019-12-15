@@ -715,6 +715,7 @@ func fetchStateCannotRead(a args) {
 		statePath+": permission denied")
 
 	mustNotExist(t, passwdPath, plainPath, groupPath)
+	mustBeOld(t, statePath)
 }
 
 func fetchStateInvalid(a args) {
