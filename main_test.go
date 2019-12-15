@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
@@ -34,7 +35,7 @@ import (
 
 const (
 	configPath  = "testdata/config.toml"
-	statePath   = "testdata/state.json"
+	statePath   = "testdata/var/state.json"
 	passwdPath  = "testdata/passwd.nsscash"
 	plainPath   = "testdata/plain"
 	groupPath   = "testdata/group.nsscash"
@@ -269,6 +270,13 @@ func runMainTest(t *testing.T, f func(args), tls *tls.Config) {
 			// Remove the file at the end of this test run, if it
 			// was created
 			defer os.Remove(p)
+
+			dir := filepath.Dir(p)
+			err = os.MkdirAll(dir, 0755)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.Remove(dir) // remove empty directories
 		}
 
 		var handler func(http.ResponseWriter, *http.Request)
@@ -710,23 +718,27 @@ func fetchStateCannotWrite(a args) {
 	mustHaveHash(t, groupPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
 
 	*a.handler = func(w http.ResponseWriter, r *http.Request) {
-		// To prevent mainFetch() from trying to update groupPath
-		// which will also fail
-		w.WriteHeader(http.StatusNotModified)
+		if r.URL.Path != "/group" {
+			return
+		}
+
+		fmt.Fprintln(w, "root:x:0:")
+		fmt.Fprintln(w, "daemon:x:1:andariel,duriel,mephisto,diablo,baal")
 	}
 
-	err := os.Chmod("testdata", 0500)
+	err := os.Chmod(filepath.Dir(statePath), 0500)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Chmod("testdata", 0755)
+	defer os.Chmod(filepath.Dir(statePath), 0755)
 
 	err = mainFetch(configPath)
 	mustBeErrorWithSubstring(t, err,
 		"permission denied")
 
 	mustNotExist(t, statePath, passwdPath, plainPath)
-	mustBeOld(t, groupPath)
+	mustBeNew(t, groupPath)
+	mustHaveHash(t, groupPath, "8c27a8403278ba2e392b86d98d4dff1fdefcafdd")
 }
 
 func fetchCannotDeploy(a args) {
