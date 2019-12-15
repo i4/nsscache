@@ -156,8 +156,8 @@ func mustMakeOld(t *testing.T, paths ...string) {
 	}
 }
 
-// mustMakeOld verifies that all paths have a modification time in the past,
-// as set by mustMakeOld().
+// mustBeOld verifies that all paths have a modification time in the past, as
+// set by mustMakeOld.
 func mustBeOld(t *testing.T, paths ...string) {
 	for _, p := range paths {
 		i, err := os.Stat(p)

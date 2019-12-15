@@ -194,7 +194,7 @@ func SerializeGroups(w io.Writer, grs []Group) error {
 	tmp := make([]byte, 8)
 
 	// Create index "sorted" in input order, used when iterating over all
-	// passwd entries (getgrent_r); keeping the original order makes
+	// group entries (getgrent_r); keeping the original order makes
 	// debugging easier
 	var indexOrig bytes.Buffer
 	for _, g := range grs {
