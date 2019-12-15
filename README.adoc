@@ -6,7 +6,7 @@ without having to rely on a (single) stable server. Traditional systems like
 LDAP or NIS require a stable server or users/groups cannot be resolved. By
 distributing the data to all systems, temporary outages of the server cause no
 issues on the clients. In addition the local storage is much faster than
-remote network access. To update the local caches polling via HTTP is
+remote network access. To update the local caches polling via HTTP/HTTPS is
 performed, for example every minute, only downloading new data if anything has
 changed.
 
@@ -16,6 +16,9 @@ local file. The second part is the NSS module (`libnss_cash.so.2`), written in
 C, which provides integration via `/etc/nsswitch.conf`. It's specifically
 designed to be very simple and uses the data prepared by `nsscash` for
 lookups. To support quick lookups, in O(log n), the files utilize indices.
+
+Nsscash can also be used separately from the NSS module to deploy arbitrary
+files to many hosts and keep them up-to-date.
 
 Nsscash is very careful when deploying the changes:
 - All files are updated using the standard "write to temporary file", "sync",
@@ -34,6 +37,8 @@ Nsscash is very careful when deploying the changes:
 - To prevent misconfigurations, empty files (no users/groups) are not
   permitted and will not be written to disk. This is designed to prevent the
   accidental loss of all users/groups on a system.
+- To detect file corruption a hash of all deployed files is stored separately
+  and verified on each `nsscash` run.
 
 The passwd/group files have the following size restrictions:
 - maximum number of entries: '2^64-1' (uint64_t)
@@ -44,11 +49,16 @@ The passwd/group files have the following size restrictions:
 - `nsscash` checks for these restrictions and aborts with an error if they are
   violated
 
-nsscash has an extensive test suite for both the Go and C part testing general
+Nsscash has an extensive test suite for both the Go and C part testing general
 requirements and various corner cases. See TODO.adoc for a list of known
 issues and possible improvements.
 
-nsscash is licensed under AGPL version 3 or later.
+Nsscash was created as replacement for nsscache [1] because nsscache has very
+complex code, especially the parts written in C, uses multiple files for data
+and indices and has had severe bugs (including temporary loss of all users and
+race conditions when updating data and index files).
+
+Nsscash is licensed under AGPL version 3 or later.
 
 [1] https://github.com/google/nsscache
 
@@ -142,14 +152,14 @@ The following global keys are available:
   forced.
 
 Each `file` block describes a single file to download/write. The following
-keys are available:
+keys are available (all keys are required unless marked as optional):
 
 - `type`: Type of this file; can be either `passwd` (for files in
   `/etc/passwd` format), `group` (for files in `/etc/group` format), or
   `plain` (arbitrary format). Only `passwd` and `group` files are supported by
   the nsscash NSS module. But, as explained above, `plain` can be used to
   distribute arbitrary files. The type is required as the `.nsscash` files are
-  pre processed for faster lookups and simpler C code which requires a known
+  preprocessed for faster lookups and simpler C code which requires a known
   format.
 
 - `url`: URL to fetch the file from; HTTP and HTTPS are supported
@@ -160,7 +170,7 @@ keys are available:
 
 - `username`/`password`: Username and password sent via HTTP Basic-Auth to the
   webserver. The configuration file must not be readable by other users when
-  this is used. (optional)
+  this key is used. (optional)
 
 - `path`: Path to store the retrieved file
 
