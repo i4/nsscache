@@ -89,12 +89,17 @@ func fetchFile(file *File, state *State) error {
 		t = zero // force download
 	}
 
+	oldT := t
 	status, body, err := fetchIfModified(file.Url,
 		file.Username, file.Password, file.CA, &t)
 	if err != nil {
 		return err
 	}
 	if status == http.StatusNotModified {
+		if oldT.IsZero() {
+			return fmt.Errorf("status code 304 " +
+				"but did not send If-Modified-Since")
+		}
 		log.Printf("%q -> %q: not modified", file.Url, file.Path)
 		return nil
 	}

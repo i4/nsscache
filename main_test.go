@@ -198,6 +198,7 @@ func TestMainFetch(t *testing.T) {
 		// Perform most tests with passwd for simplicity
 		fetchPasswdCacheFileDoesNotExist,
 		fetchPasswd404,
+		fetchPasswdUnexpected304,
 		fetchPasswdEmpty,
 		fetchPasswdInvalid,
 		fetchPasswdLimits,
@@ -324,6 +325,24 @@ func fetchPasswd404(a args) {
 	err := mainFetch(configPath)
 	mustBeErrorWithSubstring(t, err,
 		"status code 404")
+
+	mustNotExist(t, statePath, plainPath, groupPath)
+	mustBeOld(a.t, passwdPath)
+}
+
+func fetchPasswdUnexpected304(a args) {
+	t := a.t
+	mustWritePasswdConfig(t, a.url)
+	mustCreate(t, passwdPath)
+
+	*a.handler = func(w http.ResponseWriter, r *http.Request) {
+		// 304
+		w.WriteHeader(http.StatusNotModified)
+	}
+
+	err := mainFetch(configPath)
+	mustBeErrorWithSubstring(t, err,
+		"status code 304 but did not send If-Modified-Since")
 
 	mustNotExist(t, statePath, plainPath, groupPath)
 	mustBeOld(a.t, passwdPath)
