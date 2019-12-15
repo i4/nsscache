@@ -1,5 +1,7 @@
 = TODOs
 
+- Support big-endian systems in NSS module; the Go-part is endian agnostic
+
 - Currently, all files are fetched first and then updated one-by-one. This
   protects against partial updates if the server has issues, but won't help if
   the disk is full. In that case it's possible that only passwd is updated but

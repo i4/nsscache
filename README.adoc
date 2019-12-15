@@ -70,6 +70,8 @@ Nsscash is licensed under AGPL version 3 or later.
   - github.com/BurntSushi/toml
 - C compiler, for `libnss_cash.so.2`
 
+- NSS module is only supported on Little-endian systems (for now)
+
 - HTTP(S) server to provide the passwd/group/etc. files
 
 Tested on Debian Buster, but should work on any GNU/Linux system. With
