@@ -888,7 +888,7 @@ password = "%[6]s"
 	err = mainFetch(configPath)
 	mustBeErrorWithSubstring(t, err,
 		"file[0].username/passsword in use and unsafe permissions "+
-			"-rw-r--r-- on \"testdata/config.toml\"")
+			"-rw-r--r-- on \""+configPath+"\"")
 
 	mustNotExist(t, statePath, groupPath, plainPath)
 	mustBeOld(t, passwdPath)
