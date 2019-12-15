@@ -1,0 +1,11 @@
+image: debian/sid
+packages:
+  - build-essential
+  - clang
+  - git
+  - golang
+  - golang-golang-x-tools
+tasks:
+  - all: |
+      cd nsscash
+      ./ci/run

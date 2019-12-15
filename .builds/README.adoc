@@ -1,0 +1,3 @@
+= README
+
+Build manifests for build.sr.ht to test on multiple platforms

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -eu
+set -x
+
+
+make
+make test
+
+test -z "$(git clean -nd)" # any untracked files left?
+make clean
+test -z "$(git clean -ndx)" # any unignored files left?
+
+# Build with clang
+make      CC=clang
+make test CC=clang
