@@ -21,6 +21,7 @@ Nsscash can also be used separately from the NSS module to deploy arbitrary
 files to many hosts and keep them up-to-date.
 
 Nsscash is very careful when deploying the changes:
+
 - All files are updated using the standard "write to temporary file", "sync",
   "rename" steps which is atomic on UNIX file systems. The indices are stored
   in the same file preventing stale data during the update.
@@ -41,6 +42,7 @@ Nsscash is very careful when deploying the changes:
   and verified on each `nsscash` run.
 
 The passwd/group files have the following size restrictions:
+
 - maximum number of entries: '2^64-1' (uint64_t)
 - maximum passwd entry size: 65543 bytes (including newline)
 - maximum group entry size: 65535 bytes (including newline, only one member)
