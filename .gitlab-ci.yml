@@ -1,22 +1,14 @@
 .template-docker: &template-docker
   before_script:
     - apt-get update
-    - apt-get install --no-install-recommends --yes golang golang-golang-x-tools golang-github-pkg-errors-dev golang-github-burntsushi-toml-dev build-essential clang git
+    - apt-get install --no-install-recommends --yes golang golang-golang-x-tools build-essential clang git ca-certificates
   script:
-    - 'test -z "$GOPATH" && export GOPATH=/usr/share/gocode'
     # Run as user nobody so CAP_DAC_OVERRIDE is dropped and the tests can
     # chmod a file 0000 to force "permission denied" errors.
     - export HOME=/tmp # writable by nobody
     - chown -R nobody .
     # Empty TEST_* as -fsanitize doesn't work in a Docker container
-    - runuser -p -u nobody -- make      TEST_CFLAGS= TEST_LDFLAGS=
-    - runuser -p -u nobody -- make test TEST_CFLAGS= TEST_LDFLAGS=
-    - 'test -z "$(git clean -nd)"' # any untracked files left?
-    - runuser -p -u nobody -- make clean
-    - 'test -z "$(git clean -ndx)"' # any unignored files left?
-    # Build with clang
-    - runuser -p -u nobody -- make      CC=clang TEST_CFLAGS= TEST_LDFLAGS=
-    - runuser -p -u nobody -- make test CC=clang TEST_CFLAGS= TEST_LDFLAGS=
+    - runuser -p -u nobody -- ./ci/run TEST_CFLAGS= TEST_LDFLAGS=
 
 debian-stable:
   <<: *template-docker

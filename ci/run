@@ -4,13 +4,18 @@ set -eu
 set -x
 
 
-make
-make test
+flags=
+if test $# -ne 0; then
+    flags="$*"
+fi
+
+make      $flags
+make test $flags
 
 test -z "$(git clean -nd)" # any untracked files left?
 make clean
 test -z "$(git clean -ndx)" # any unignored files left?
 
 # Build with clang
-make      CC=clang
-make test CC=clang
+make      CC=clang $flags
+make test CC=clang $flags
