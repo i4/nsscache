@@ -166,8 +166,7 @@ func mustBeOld(t *testing.T, paths ...string) {
 		}
 
 		mtime := i.ModTime()
-		now := time.Now()
-		if now.Sub(mtime) < time.Hour {
+		if time.Since(mtime) < time.Hour {
 			t.Errorf("%q was recently modified", p)
 		}
 	}
@@ -182,8 +181,7 @@ func mustBeNew(t *testing.T, paths ...string) {
 		}
 
 		mtime := i.ModTime()
-		now := time.Now()
-		if now.Sub(mtime) > time.Hour {
+		if time.Since(mtime) > time.Hour {
 			t.Errorf("%q was not recently modified", p)
 		}
 	}
