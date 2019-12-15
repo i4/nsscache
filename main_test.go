@@ -327,7 +327,7 @@ func fetchPasswd404(a args) {
 		"status code 404")
 
 	mustNotExist(t, statePath, plainPath, groupPath)
-	mustBeOld(a.t, passwdPath)
+	mustBeOld(t, passwdPath)
 }
 
 func fetchPasswdUnexpected304(a args) {
@@ -345,7 +345,7 @@ func fetchPasswdUnexpected304(a args) {
 		"status code 304 but did not send If-Modified-Since")
 
 	mustNotExist(t, statePath, plainPath, groupPath)
-	mustBeOld(a.t, passwdPath)
+	mustBeOld(t, passwdPath)
 }
 
 func fetchPasswdEmpty(a args) {
