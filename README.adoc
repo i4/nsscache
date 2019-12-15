@@ -45,7 +45,8 @@ The passwd/group files have the following size restrictions:
   violated
 
 nsscash has an extensive test suite for both the Go and C part testing general
-requirements and various corner cases.
+requirements and various corner cases. See TODO.adoc for a list of known
+issues and possible improvements.
 
 nsscash is licensed under AGPL version 3 or later.
 
