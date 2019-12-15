@@ -321,7 +321,7 @@ static void test_limits(void) {
     int r;
     FILE *fh;
 
-    const char *nsscache_cmd = "../nsscash convert passwd "
+    const char *nsscash_cmd = "../nsscash convert passwd "
         "tests/limits tests/limits.nsscash 2> /dev/null";
 
     // Entries which will not fit in uint16_t, nsscash must abort
@@ -333,7 +333,7 @@ static void test_limits(void) {
     r = fclose(fh);
     assert(r == 0);
 
-    r = system(nsscache_cmd);
+    r = system(nsscash_cmd);
     assert(r != -1);
     assert(WIFEXITED(r) && WEXITSTATUS(r) == 1);
 
@@ -344,7 +344,7 @@ static void test_limits(void) {
     r = fclose(fh);
     assert(r == 0);
 
-    r = system(nsscache_cmd);
+    r = system(nsscash_cmd);
     assert(r != -1);
     assert(WIFEXITED(r) && WEXITSTATUS(r) == 1);
 
@@ -357,7 +357,7 @@ static void test_limits(void) {
     r = fclose(fh);
     assert(r == 0);
 
-    r = system(nsscache_cmd);
+    r = system(nsscash_cmd);
     assert(r != -1);
     assert(WIFEXITED(r) && WEXITSTATUS(r) == 0);
 
