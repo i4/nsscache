@@ -1,6 +1,6 @@
 // Parse /etc/passwd files and serialize them
 
-// Copyright (C) 2019  Simon Ruderich
+// Copyright (C) 2019-2020  Simon Ruderich
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by

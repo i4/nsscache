@@ -1,6 +1,6 @@
 // Read and write the state file used to keep data over multiple runs
 
-// Copyright (C) 2019  Simon Ruderich
+// Copyright (C) 2019-2020  Simon Ruderich
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
