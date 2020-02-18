@@ -23,6 +23,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/google/renameio"
 )
 
 type State struct {
@@ -68,26 +70,15 @@ func WriteState(path string, state *State) error {
 		return err
 	}
 
-	// Write the file in an atomic fashion by creating a temporary file
-	// and renaming it over the target file
-
-	dir := filepath.Dir(path)
-	name := filepath.Base(path)
-
-	f, err := ioutil.TempFile(dir, "tmp-"+name+"-")
+	f, err := renameio.TempFile(filepath.Dir(path), path)
 	if err != nil {
 		return err
 	}
-	defer os.Remove(f.Name())
-	defer f.Close()
+	defer f.Cleanup()
 
 	_, err = f.Write(x)
 	if err != nil {
 		return err
 	}
-	err = f.Sync()
-	if err != nil {
-		return err
-	}
-	return os.Rename(f.Name(), path)
+	return f.CloseAtomicallyReplace()
 }

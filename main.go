@@ -25,6 +25,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/google/renameio"
 )
 
 func main() {
@@ -130,29 +132,24 @@ func mainConvert(typ, srcPath, dstPath string) error {
 		return fmt.Errorf("unsupported file type %v", t)
 	}
 
-	dstDir := filepath.Dir(dstPath)
-	dstName := filepath.Base(dstPath)
-
 	// We must create the file first or deployFile() will abort; this is
 	// ugly because deployFile() already performs an atomic replacement
 	// but the simplest solution with the least duplicate code
-	f, err := ioutil.TempFile(dstDir, "tmp-"+dstName+"-")
+	f, err := renameio.TempFile(filepath.Dir(dstPath), dstPath)
 	if err != nil {
 		return err
 	}
-	tmpPath := f.Name()
-	defer os.Remove(tmpPath)
-	f.Close()
+	defer f.Cleanup()
 
 	err = deployFile(&File{
 		Type: t,
 		Url:  srcPath,
-		Path: tmpPath,
+		Path: f.Name(),
 		body: x.Bytes(),
 	})
 	if err != nil {
 		return err
 	}
 
-	return os.Rename(tmpPath, dstPath)
+	return f.CloseAtomicallyReplace()
 }

@@ -30,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/renameio"
 	"github.com/pkg/errors"
 )
 
@@ -164,18 +165,11 @@ func deployFile(file *File) error {
 		return fmt.Errorf("refusing to write empty file")
 	}
 
-	// Write the file in an atomic fashion by creating a temporary file
-	// and renaming it over the target file
-
-	dir := filepath.Dir(file.Path)
-	name := filepath.Base(file.Path)
-
-	f, err := ioutil.TempFile(dir, "tmp-"+name+"-")
+	f, err := renameio.TempFile(filepath.Dir(file.Path), file.Path)
 	if err != nil {
 		return err
 	}
-	defer os.Remove(f.Name())
-	defer f.Close()
+	defer f.Cleanup()
 
 	// Apply permissions/user/group from the target file but remove the
 	// write permissions to discourage manual modifications, use Stat
@@ -204,9 +198,5 @@ func deployFile(file *File) error {
 	if err != nil {
 		return err
 	}
-	err = f.Sync()
-	if err != nil {
-		return err
-	}
-	return os.Rename(f.Name(), file.Path)
+	return f.CloseAtomicallyReplace()
 }

@@ -68,8 +68,9 @@ Nsscash is licensed under AGPL version 3 or later.
 == REQUIREMENTS
 
 - Go, for `nsscash`
-  * github.com/pkg/errors
   * github.com/BurntSushi/toml
+  * github.com/google/renameio
+  * github.com/pkg/errors
 - C compiler, for `libnss_cash.so.2`
 
 - HTTP(S) server to provide the passwd/group/etc. files
