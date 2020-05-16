@@ -1,0 +1,10 @@
+image: freebsd/latest
+packages:
+  - go
+  - go-tools
+  - gmake
+tasks:
+  - all: |
+      sudo ln -sf /usr/local/bin/gmake /usr/bin/make
+      cd nsscash
+      ./ci/run
