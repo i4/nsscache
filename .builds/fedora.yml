@@ -1,0 +1,12 @@
+image: fedora/latest
+packages:
+  - clang
+  - golang
+  - libasan
+  - libubsan
+tasks:
+  - all: |
+      cd nsscash
+      go install golang.org/x/tools/cmd/stringer
+      export PATH=$HOME/go/bin:$PATH
+      ./ci/run
