@@ -1,0 +1,9 @@
+image: archlinux
+packages:
+  - clang
+  - go
+  - go-tools
+tasks:
+  - all: |
+      cd nsscash
+      ./ci/run
