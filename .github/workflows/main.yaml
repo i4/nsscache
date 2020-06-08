@@ -1,0 +1,41 @@
+# Github Actions workflow
+
+
+name: CI
+
+on:
+  # Run the jobs for all pushes and pull requests
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+  # And once per month to ensure the project continues to work
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  test-docker:
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    strategy:
+      matrix:
+        container:
+          - debian:stable
+          - debian:testing
+          - debian:sid
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup dependencies
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends --yes golang golang-golang-x-tools build-essential clang git ca-certificates
+      - name: Run CI
+        run: |
+          # Run as user nobody so CAP_DAC_OVERRIDE is dropped and the tests
+          # can chmod a file 0000 to force "permission denied" errors.
+          export HOME=/tmp # writable by nobody
+          chown -R nobody .
+          # Empty TEST_* as -fsanitize doesn't work in a Docker container
+          runuser -p -u nobody -- ./ci/run TEST_CFLAGS= TEST_LDFLAGS=
