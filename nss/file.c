@@ -1,7 +1,7 @@
 /*
  * Load and unload nsscash files
  *
- * Copyright (C) 2019-2020  Simon Ruderich
+ * Copyright (C) 2019-2021  Simon Ruderich
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
