@@ -198,5 +198,9 @@ func deployFile(file *File) error {
 	if err != nil {
 		return err
 	}
-	return f.CloseAtomicallyReplace()
+	err = f.CloseAtomicallyReplace()
+	if err != nil {
+		return err
+	}
+	return syncPath(filepath.Dir(file.Path))
 }

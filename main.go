@@ -151,5 +151,9 @@ func mainConvert(typ, srcPath, dstPath string) error {
 		return err
 	}
 
-	return f.CloseAtomicallyReplace()
+	err = f.CloseAtomicallyReplace()
+	if err != nil {
+		return err
+	}
+	return syncPath(filepath.Dir(dstPath))
 }
