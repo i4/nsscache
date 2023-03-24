@@ -26,7 +26,7 @@ jobs:
           - debian:testing
           - debian:sid
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup dependencies
         run: |
           apt-get update
