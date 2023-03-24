@@ -9,6 +9,12 @@
     - chown -R nobody .
     # Empty TEST_* as -fsanitize doesn't work in a Docker container
     - runuser -p -u nobody -- ./ci/run TEST_CFLAGS= TEST_LDFLAGS=
+  variables:
+    # The chown to nobody above causes permissions errors in recent Git
+    # versions "fatal: detected dubious ownership in repository [...] To add
+    # an exception for this directory, call: git config --global --add
+    # safe.directory [...]".
+    GIT_STRATEGY: clone
 
 debian-stable:
   <<: *template-docker
